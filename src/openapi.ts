@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { registrationCredentials, loginCredentials } from './controllers/auth.controller';
 import * as profiles from './modules/profiles/schemas';
 import * as market from './modules/marketplace/schemas';
 import { tutorSearchSchema } from './modules/search/schemas';
@@ -53,25 +54,17 @@ function operation(
     },
   };
 }
-const credentials = z.object({ email: z.email(), password: z.string().min(10).max(128) }).strict();
 operation(
   '/api/v1/auth/register',
   'post',
   'Auth foundation',
   'Register a LOCAL account; return access token and HttpOnly refresh cookie',
-  credentials,
+  registrationCredentials,
   true,
   undefined,
   '201',
 );
-operation(
-  '/api/v1/auth/login',
-  'post',
-  'Auth foundation',
-  'LOCAL login',
-  credentials.extend({ password: z.string().min(1).max(128) }),
-  true,
-);
+operation('/api/v1/auth/login', 'post', 'Auth foundation', 'LOCAL login', loginCredentials, true);
 for (const path of ['refresh', 'refresh-token']) {
   operation(
     `/api/v1/auth/${path}`,
@@ -91,6 +84,33 @@ operation(
   undefined,
   '204',
 );
+operation(
+  '/api/v1/auth/sessions',
+  'get',
+  'Auth',
+  'List own active sessions without refresh hashes',
+);
+operation(
+  '/api/v1/auth/sessions/{id}',
+  'delete',
+  'Auth',
+  'Revoke an owned active session immediately',
+  undefined,
+  false,
+  undefined,
+  '204',
+);
+operation(
+  '/api/v1/auth/oauth/{provider}',
+  'post',
+  'Auth',
+  'Reserved OAuth integration; currently returns 501',
+  undefined,
+  true,
+);
+paths['/api/v1/auth/oauth/{provider}']!.post!.responses = {
+  '501': { description: 'OAuth integration is not implemented' },
+};
 operation('/api/v1/users/me', 'get', 'Identity', 'Get account roles and current UI mode');
 operation(
   '/api/v1/users/me/mode',

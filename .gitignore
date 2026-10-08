@@ -7,3 +7,6 @@ coverage/
 !.env.test.example
 *.log
 .DS_Store
+.vscode/
+.idea/
+*.tsbuildinfo

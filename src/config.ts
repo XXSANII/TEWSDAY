@@ -14,7 +14,10 @@ const configSchema = z.object({
   LOG_LEVEL: z.enum(['silent', 'fatal', 'error', 'warn', 'info', 'debug']).default('info'),
 });
 
-export const config = configSchema.parse(process.env);
+export const config = configSchema.parse({
+  ...process.env,
+  JWT_SECRET: process.env.JWT_SECRET ?? process.env.JWT_ACCESS_SECRET,
+});
 export const allowedOrigins = config.CORS_ORIGINS.split(',').map((s) => s.trim());
 if (allowedOrigins.includes('*')) throw new Error('CORS_ORIGINS must contain explicit origins');
 if (config.NODE_ENV === 'production' && !config.REDIS_URL) {

@@ -3,7 +3,7 @@
 Node.js + Express + TypeScript + Prisma modular monolith, backed by PostgreSQL 16 / PostGIS and Redis 7.
 
 This implementation covers the four **Kong-owned Notion tasks**: Tutor Profile, Student Profile,
-Tutor Search and Marketplace. It includes LOCAL authentication, profile onboarding, subject reads
+Tutor Search and Marketplace. It integrates the existing team LOCAL authentication with Prisma, durable session management, profile onboarding, subject reads
 and mode switching so those APIs can run and be tested. The other team-owned modules are not
 claimed complete.
 
@@ -58,20 +58,20 @@ private projections, geometry distances, refresh rotation/revocation and immutab
 
 ## API modules
 
-| Module          | Routes                                                                                                                                                                                         |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tutor Profile   | GET/PUT/PATCH `/tutors/me`; POST `/tutors/me/education`; DELETE `/tutors/me/education/{id}`; GET/PUT `/tutors/me/availability`; PUT `/tutors/me/subjects`; POST `/tutors/me/change-requests`   |
-| Student Profile | GET/PUT `/students/me`; PUT `/students/me/emergency-contact`                                                                                                                                   |
-| Tutor Search    | GET `/tutors`, `/tutors/{id}`, `/tutors/{id}/availability`                                                                                                                                     |
-| Marketplace     | GET/POST `/jobs`; GET `/jobs/{id}`; PATCH `/jobs/{id}/status`; POST `/jobs/{id}/share`; GET `/jobs/{id}/applications`; POST `/jobs/{id}/apply`; PATCH `/applications/{id}/status`              |
-| Prerequisites   | POST `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`; GET `/users/me`; PATCH `/users/me/mode`; POST `/profiles/student`, `/profiles/tutor`; GET `/subjects`, `/subjects/{id}` |
+| Module          | Routes                                                                                                                                                                                                                                             |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tutor Profile   | GET/PUT/PATCH `/tutors/me`; POST `/tutors/me/education`; DELETE `/tutors/me/education/{id}`; GET/PUT `/tutors/me/availability`; PUT `/tutors/me/subjects`; POST `/tutors/me/change-requests`                                                       |
+| Student Profile | GET/PUT `/students/me`; PUT `/students/me/emergency-contact`                                                                                                                                                                                       |
+| Tutor Search    | GET `/tutors`, `/tutors/{id}`, `/tutors/{id}/availability`                                                                                                                                                                                         |
+| Marketplace     | GET/POST `/jobs`; GET `/jobs/{id}`; PATCH `/jobs/{id}/status`; POST `/jobs/{id}/share`; GET `/jobs/{id}/applications`; POST `/jobs/{id}/apply`; PATCH `/applications/{id}/status`                                                                  |
+| Prerequisites   | POST `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`; GET `/auth/sessions`; DELETE `/auth/sessions/{id}`; GET `/users/me`; PATCH `/users/me/mode`; POST `/profiles/student`, `/profiles/tutor`; GET `/subjects`, `/subjects/{id}` |
 
 All paths have `/api/v1` prefix. TRD-compatible aliases: POST `/jobs/{id}/applications`,
 POST `/jobs/{jobId}/applications/{id}/accept`, POST `/auth/refresh-token`.
 See Swagger for exact request fields and filters. Requests use snake_case V2 names, strict validation
 and server-generated IDs. JSON responses use `{ data: ... }`; errors use `{ error: { code, message,
 requestId, timestamp } }`. Access tokens carry `sub = users.id`, `sid = user_sessions.id`. Refresh
-tokens are HttpOnly/SameSite cookies and only SHA-256 hashes persist in V2.
+tokens are HttpOnly/SameSite cookies and only SHA-256 hashes persist in V2. Existing bcrypt credentials remain usable; new passwords use Argon2id. Optional `confirm_password` is checked when supplied. The previous body-based refresh response is replaced by the TRD cookie contract. `JWT_ACCESS_SECRET` is accepted as an alias for `JWT_SECRET`; token lifetimes follow the TRD (15 minutes / 7 days).
 
 PUT on an individual profile changes only supplied fields. PUT availability/subjects replaces the
 whole active collection atomically while retaining inactive history. Parent/emergency contacts
@@ -120,3 +120,13 @@ PostGIS columns are `Unsupported` in Prisma and use parameterized Prisma SQL for
 and meter-based spatial queries, following [Prisma's raw-query guidance](https://docs.prisma.io/docs/orm/prisma-client/using-raw-sql/safeql).
 Prisma is pinned to the compatible stable 6.12 line; upgrades require migration and integration
 verification. Commit the lockfile and run dependency audits in CI.
+
+## Integration with the existing Auth implementation
+
+Auth keeps the existing `routes/auth.routes.ts`, `controllers/auth.controller.ts`,
+`services/auth.service.ts` and `repositories/session.repository.ts` entry points. All domain routes
+share `middleware/auth.ts`; `auth.middleware.ts` provides the compatible import path. Request identity
+is `req.actor` with durable session verification. `config.ts` and `db.ts` own the single environment
+and Prisma connection. Superseded `pg` repositories and token helpers have been consolidated into
+these entry points rather than leaving a second authentication implementation. Existing OAuth route
+continues to return 501 until the separate provider task is completed.

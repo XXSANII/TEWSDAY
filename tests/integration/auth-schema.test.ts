@@ -200,3 +200,80 @@ test('health, API documentation, subjects, CORS and standardized errors are usab
   expect(error.body.error.requestId).toBe(error.headers['x-request-id']);
   expect(error.body.error.timestamp).toBeTruthy();
 });
+
+test('session management preserves team routes, isolates ownership and revokes both tokens immediately', async () => {
+  const registered = await request(app).post('/api/v1/auth/register').send(credentials).expect(201);
+  const firstToken = registered.body.data.access_token as string;
+  const second = await request(app).post('/api/v1/auth/login').send(credentials).expect(200);
+  const cookie = String(second.headers['set-cookie']?.[0] ?? '').split(';')[0]!;
+  const list = await request(app)
+    .get('/api/v1/auth/sessions')
+    .auth(firstToken, { type: 'bearer' })
+    .expect(200);
+  expect(list.body.data).toHaveLength(2);
+  expect(list.body.data.filter((s: { is_current: boolean }) => s.is_current)).toHaveLength(1);
+  expect(JSON.stringify(list.body)).not.toContain('refresh_token_hash');
+  const otherId = list.body.data.find((s: { is_current: boolean }) => !s.is_current).id as string;
+  const outsider = await person(app, 'student');
+  await request(app)
+    .delete(`/api/v1/auth/sessions/${otherId}`)
+    .auth(outsider.token, { type: 'bearer' })
+    .expect(404);
+  await request(app)
+    .delete('/api/v1/auth/sessions/not-a-session')
+    .auth(firstToken, { type: 'bearer' })
+    .expect(400);
+  await request(app)
+    .delete(`/api/v1/auth/sessions/${otherId}`)
+    .auth(firstToken, { type: 'bearer' })
+    .expect(204);
+  await request(app)
+    .get('/api/v1/users/me')
+    .auth(second.body.data.access_token, { type: 'bearer' })
+    .expect(401);
+  await request(app).post('/api/v1/auth/refresh-token').set('Cookie', cookie).send({}).expect(401);
+  const currentId = list.body.data.find((s: { is_current: boolean }) => s.is_current).id as string;
+  const revoked = await request(app)
+    .delete(`/api/v1/auth/sessions/${currentId}`)
+    .auth(firstToken, { type: 'bearer' })
+    .expect(204);
+  expect(String(revoked.headers['set-cookie']?.[0] ?? '')).toContain('Expires=Thu, 01 Jan 1970');
+  await request(app).get('/api/v1/auth/sessions').auth(firstToken, { type: 'bearer' }).expect(401);
+});
+test('team registration confirmation and bcrypt accounts remain compatible; OAuth remains explicitly reserved', async () => {
+  await request(app)
+    .post('/api/v1/auth/register')
+    .send({ ...credentials, confirm_password: 'mismatch' })
+    .expect(400);
+  await request(app)
+    .post('/api/v1/auth/register')
+    .send({ ...credentials, confirm_password: credentials.password })
+    .expect(201);
+  const bcrypt = await import('bcrypt');
+  const provider = (await db.user_auth_providers.findMany())[0]!;
+  await db.user_auth_providers.update({
+    where: { id: provider.id },
+    data: { password_hash: await bcrypt.hash(credentials.password, 12) },
+  });
+  const loggedIn = await request(app).post('/api/v1/auth/login').send(credentials).expect(200);
+  await request(app)
+    .get('/api/v1/users/me')
+    .auth(loggedIn.body.data.access_token, { type: 'bearer' })
+    .expect(200);
+  await request(app)
+    .post('/api/v1/auth/login')
+    .send({ ...credentials, password: 'wrong-password' })
+    .expect(401);
+  await db.user_auth_providers.update({
+    where: { id: provider.id },
+    data: { password_hash: 'invalid-stored-hash' },
+  });
+  await request(app).post('/api/v1/auth/login').send(credentials).expect(401);
+  await db.user_auth_providers.update({
+    where: { id: provider.id },
+    data: { password_hash: '$argon2-malformed' },
+  });
+  await request(app).post('/api/v1/auth/login').send(credentials).expect(401);
+  await request(app).post('/api/v1/auth/oauth/google').send({}).expect(501);
+  await request(app).get('/').expect(200);
+});

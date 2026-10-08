@@ -96,3 +96,15 @@ Monthly invoice consolidation/group-class gaps documented in TRD remain unresolv
 asserts those capabilities are Done. Expiry policy is configurable in BRD but no approved expiry
 setting is supplied to this task; explicit owner closing/cancellation is implemented, with no
 invented expires_at or EXPIRED state.
+
+## Existing main Auth integration
+
+Merged main commit `4e61a92` and preserved the team's register/login/refresh-token/logout,
+sessions and OAuth route names. Auth now shares the Prisma connection, transactional registration,
+15-minute JWTs, absolute 7-day refresh expiry, HttpOnly cookies and per-request DB revocation checks.
+The `pg`-based duplicate connection/repositories and unchecked token middleware were consolidated.
+Session DELETE now returns a complete response, checks ownership, and revokes both access and refresh
+use. Registration accepts and validates optional `confirm_password`; existing bcrypt hashes are
+supported, while newly created credentials use Argon2id. No real legacy database was migrated.
+JSON refresh tokens and prior 1-hour/30-day lifetimes are intentionally replaced by the supplied TRD
+contract. OAuth remains a 501 placeholder, as on main. Normalized LF text is enforced across platforms.

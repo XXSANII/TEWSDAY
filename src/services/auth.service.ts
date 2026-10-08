@@ -1,13 +1,15 @@
 import { randomBytes, createHash } from 'node:crypto';
 import argon2 from 'argon2';
+import { comparePassword, hashPassword } from '../utils/password';
+import * as sessions from '../repositories/session.repository';
 import jwt from 'jsonwebtoken';
 import { Prisma } from '@prisma/client';
-import { config } from '../../config';
-import { db, transaction, Transaction } from '../../db';
-import { newId } from '../../common/ids';
-import { guard, ApiError } from '../../common/errors';
-import { first } from '../../common/sql';
-import { setRequestSession } from '../../common/request-context';
+import { config } from '../config';
+import { db, transaction, Transaction } from '../db';
+import { newId } from '../common/ids';
+import { guard, ApiError } from '../common/errors';
+import { first } from '../common/sql';
+import { setRequestSession } from '../common/request-context';
 
 const hash = (token: string) => createHash('sha256').update(token).digest('hex');
 const sign = (userId: string, sessionId: string) =>
@@ -40,7 +42,7 @@ async function createSession(tx: Transaction, userId: string, userAgent?: string
 
 export async function register(email: string, password: string, userAgent?: string) {
   const normalized = email.trim().toLowerCase();
-  const passwordHash = await argon2.hash(password, { type: argon2.argon2id });
+  const passwordHash = await hashPassword(password);
   const userId = newId('usr');
   return transaction(userId, async (tx) => {
     // V2 does not declare email uniqueness; serialize the application guard for registrations.
@@ -74,7 +76,7 @@ export async function login(email: string, password: string, userAgent?: string)
   const found = rows.length === 1 ? rows[0] : undefined;
   // Equal-cost password verification also runs for unknown email addresses.
   const fakeHash = await dummyPasswordHash;
-  const valid = await argon2.verify(found?.password_hash ?? fakeHash, password);
+  const valid = await comparePassword(password, found?.password_hash ?? fakeHash);
   guard(found && valid, 401, 'INVALID_CREDENTIALS', 'Invalid email or password');
   return transaction(found!.id, async (tx) => {
     const user = await first<{ is_active: boolean }>(
@@ -143,4 +145,22 @@ export async function logout(userId: string, sessionId: string) {
       },
     }),
   );
+}
+
+export async function getSessions(userId: string, currentSessionId: string) {
+  const rows = await sessions.getUserSessions(userId);
+  return rows.map((row) => ({
+    id: row.id,
+    device: row.device_name,
+    ip_address: row.ip_address,
+    last_active: row.last_active_at,
+    expires_at: row.expires_at,
+    is_current: row.id === currentSessionId,
+  }));
+}
+export async function forceLogout(userId: string, sessionId: string) {
+  return transaction(userId, async (tx) => {
+    const revoked = await sessions.revokeUserSession(tx, userId, sessionId);
+    guard(revoked, 404, 'SESSION_NOT_FOUND', 'Active session not found');
+  });
 }

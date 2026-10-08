@@ -1,4 +1,4 @@
-import { createApp } from './app';
+import app from './app';
 import { config } from './config';
 import { db } from './db';
 import { redis } from './redis';
@@ -10,7 +10,7 @@ async function main() {
     if (redis.status === 'wait') await redis.connect();
     await redis.ping();
   }
-  const server = createApp().listen(config.PORT);
+  const server = app.listen(config.PORT);
   const shutdown = () => {
     server.close(() => {
       Promise.all([db.$disconnect(), redis?.quit()])
