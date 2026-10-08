@@ -1,0 +1,42 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "คู่มือติดตั้งและตั้งค่า Backend ของแพลตฟอร์มหาครูสอนพิเศษ ตั้งแต่เครื่อง Developer ไปจนถึง Production**สมมติฐานที่ผมตั้งเอง** (ปรับได้): Python 3.12, SQLAlchemy 2.x + Alembic, Redis ใช้ทั้ง Cache / Rate limit / Pub-Sub, Background worker ใช้ ARQ, S3 + CloudFront สำหรับไฟล์ และ AWS MediaConvert สำหรับแปลงวิดีโอเป็น HLS ข้อที่ยืนยันจากเอกสารเดิม: FastAPI, PostgreSQL + PostGIS, Redis, AWS S3, CloudFront CDN, ID แบบ Prefix ขนาด `VARCHAR(36)`",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XXSANII/TEWSDAY.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/XXSANII/TEWSDAY/issues"
+  },
+  "homepage": "https://github.com/XXSANII/TEWSDAY#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.6.4",
+    "@types/pg": "^8.23.1",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
+  }
+}
