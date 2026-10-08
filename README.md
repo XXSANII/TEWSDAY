@@ -1,138 +1,134 @@
+# TewsDay API
 
-# Backend
+Node.js + Express + TypeScript + Prisma modular monolith, backed by PostgreSQL 16 / PostGIS and Redis 7.
 
-Backend API สำหรับโปรเจกต์
+This implementation covers the four **Kong-owned Notion tasks**: Tutor Profile, Student Profile,
+Tutor Search and Marketplace. It integrates the existing team LOCAL authentication with Prisma, durable session management, profile onboarding, subject reads
+and mode switching so those APIs can run and be tested. The other team-owned modules are not
+claimed complete.
 
-## Requirements
+## Run locally
 
-ก่อนเริ่มใช้งาน ต้องติดตั้ง:
+Use Node **20.19+** (20.x) or **22.13+**, npm and Docker. PowerShell example:
 
-* Node.js
-* npm
-* Git
-
-ตรวจสอบเวอร์ชัน:
-
-```bash
-node -v
-npm -v
-git --version
-```
-
-## Installation
-
-### 1. Clone Repository
-
-```bash
-git clone <repository-url>
-cd BackEnd
-```
-
-### 2. ติดตั้ง Dependencies
-
-ถ้ามี `package-lock.json` ให้ใช้:
-
-```bash
+```powershell
 npm ci
-```
-
-หรือสามารถใช้:
-
-```bash
-npm install
-```
-
-คำสั่งนี้จะติดตั้ง package ที่ระบุไว้ใน `package.json`
-
-### 3. ตั้งค่า Environment Variables
-
-สร้างไฟล์ `.env` จาก `.env.example`
-
-```bash
-cp .env.example .env
-```
-
-จากนั้นเปิดไฟล์ `.env` และกำหนดค่าตาม environment ของเครื่อง
-
-> ห้าม commit ไฟล์ `.env` ขึ้น Git เนื่องจากอาจมีข้อมูลสำคัญ เช่น Secret หรือ Database credentials
-
-### 4. Build Project
-
-ตรวจสอบว่า TypeScript สามารถ compile ได้:
-
-```bash
-npm run build
-```
-
-### 5. Run Development Server
-
-```bash
+Copy-Item .env.example .env
+docker compose up -d db redis --wait
+$env:DATABASE_URL='postgresql://tewsday_owner:local_owner_only@localhost:55432/tewsday?schema=public'
+npm run db:migrate
+npm run db:seed
+Get-Content scripts/local-runtime-role.sql -Raw | docker compose exec -T db psql -U tewsday_owner -d tewsday -v ON_ERROR_STOP=1
+Remove-Item Env:DATABASE_URL
 npm run dev
 ```
 
-Server จะทำงานตาม Port ที่กำหนดไว้ใน `.env`
+Replace the sample JWT secret in `.env` with a random secret before deployment. The sample database
+passwords are for local development only. Migrations and seed use the schema-owner connection;
+the application uses the restricted `tewsday_app` connection from `.env`. Production must provision
+equivalent grants and unique credentials. Runtime has no DELETE/TRUNCATE/DDL or audit-write grants.
 
-## Project Structure
+- API: `http://localhost:3000/api/v1`
+- Swagger: `http://localhost:3000/docs/`
+- OpenAPI: `http://localhost:3000/openapi.json`
+- Health: `http://localhost:3000/health`
 
-```text
-BackEnd/
-├── src/
-│   ├── controllers/
-│   ├── services/
-│   ├── repositories/
-│   ├── routes/
-│   ├── config/
-│   ├── middleware/
-│   └── server.ts
-├── .env.example
-├── .gitignore
-├── package.json
-├── package-lock.json
-├── tsconfig.json
-└── README.md
+On Linux/macOS, use `cp .env.example .env`, `export DATABASE_URL=...`, `cat scripts/local-runtime-role.sql | docker compose exec -T db psql -U tewsday_owner -d tewsday -v ON_ERROR_STOP=1`, then `unset DATABASE_URL`.
+
+## Verify
+
+The integration suite requires a **dedicated database ending in `_test`**. It clears only fixtures
+in that database and fails before clearing a database with any other name.
+
+```powershell
+docker compose --profile test up -d test-db --wait
+$env:DATABASE_URL='postgresql://tewsday_owner:local_owner_only@localhost:55433/tewsday_test?schema=public'
+$env:NODE_ENV='test'
+npm run db:migrate
+npm run check
+npm audit --omit=dev
+Remove-Item Env:DATABASE_URL
+Remove-Item Env:NODE_ENV
 ```
 
-## Database
+`check` generates Prisma Client, checks types, lint and formatting, runs Jest/Supertest with
+at least 80% statements/lines/functions coverage, then builds TypeScript. CI repeats this against
+real PostGIS and builds the Docker image. Database integration tests cover concurrency, rollback,
+private projections, geometry distances, refresh rotation/revocation and immutable audit history.
 
-ปัจจุบัน Database ยังไม่ได้สร้างเป็น PostgreSQL จริง
+## API modules
 
-มีการออกแบบ **Paper DB / Database Schema** ไว้สำหรับใช้เป็นโครงสร้างอ้างอิงในการพัฒนา API
+| Module          | Routes                                                                                                                                                                                                                                             |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tutor Profile   | GET/PUT/PATCH `/tutors/me`; POST `/tutors/me/education`; DELETE `/tutors/me/education/{id}`; GET/PUT `/tutors/me/availability`; PUT `/tutors/me/subjects`; POST `/tutors/me/change-requests`                                                       |
+| Student Profile | GET/PUT `/students/me`; PUT `/students/me/emergency-contact`                                                                                                                                                                                       |
+| Tutor Search    | GET `/tutors`, `/tutors/{id}`, `/tutors/{id}/availability`                                                                                                                                                                                         |
+| Marketplace     | GET/POST `/jobs`; GET `/jobs/{id}`; PATCH `/jobs/{id}/status`; POST `/jobs/{id}/share`; GET `/jobs/{id}/applications`; POST `/jobs/{id}/apply`; PATCH `/applications/{id}/status`                                                                  |
+| Prerequisites   | POST `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`; GET `/auth/sessions`; DELETE `/auth/sessions/{id}`; GET `/users/me`; PATCH `/users/me/mode`; POST `/profiles/student`, `/profiles/tutor`; GET `/subjects`, `/subjects/{id}` |
 
-ดังนั้น API ที่เกี่ยวข้องกับ Database อาจยังไม่สามารถทดสอบกับ Database จริงได้จนกว่าจะมีการสร้าง PostgreSQL
+All paths have `/api/v1` prefix. TRD-compatible aliases: POST `/jobs/{id}/applications`,
+POST `/jobs/{jobId}/applications/{id}/accept`, POST `/auth/refresh-token`.
+See Swagger for exact request fields and filters. Requests use snake_case V2 names, strict validation
+and server-generated IDs. JSON responses use `{ data: ... }`; errors use `{ error: { code, message,
+requestId, timestamp } }`. Access tokens carry `sub = users.id`, `sid = user_sessions.id`. Refresh
+tokens are HttpOnly/SameSite cookies and only SHA-256 hashes persist in V2. Existing bcrypt credentials remain usable; new passwords use Argon2id. Optional `confirm_password` is checked when supplied. The previous body-based refresh response is replaced by the TRD cookie contract. `JWT_ACCESS_SECRET` is accepted as an alias for `JWT_SECRET`; token lifetimes follow the TRD (15 minutes / 7 days).
 
-## Development
+PUT on an individual profile changes only supplied fields. PUT availability/subjects replaces the
+whole active collection atomically while retaining inactive history. Parent/emergency contacts
+belong to the student profile and never grant a PARENT role.
 
-สามารถพัฒนา API เพิ่มเติมโดยยึดตาม API Specification และ Paper DB ของโปรเจกต์
+Public tutor/job reads do not return exact coordinates, contacts, bank/PromptPay details or private
+file keys. Tutor search rechecks active users, held tutor roles and account status on every request.
+Search uses subject-specific rates, published student-to-tutor ratings, local availability and
+PostGIS geography casts for kilometer filters. Availability is local wall time (Asia/Bangkok);
+audit/session timestamps are UTC. Paginated feeds sort by creation time and ID, newest first.
 
-ตัวอย่าง API ที่สามารถพัฒนาต่อ:
+## Source authority and boundaries
 
-```text
-POST   /api/v1/bookings
-GET    /api/v1/bookings
-GET    /api/v1/bookings/:id
-POST   /api/v1/bookings/:id/contract
-PATCH  /api/v1/bookings/:id/confirm
-PATCH  /api/v1/bookings/:id/cancel
+- [Updated TRD](https://docs.google.com/document/d/12ZN41mn84vj8Ajf1gxLqUKhfcUKfos1PThFcdH7Wqoc/edit): backend stack and architectural decisions.
+- Supplied [Database Schema V2](docs/reference/Database-Schema-ForAllTutor-V2.md): all 24 core tables,
+  exact columns, prefixed IDs, foreign keys, declared unique/check constraints and enum values.
+- Exported Notion API checklists: four assigned modules and their route names. [Mapping and decisions](docs/implementation-notes.md).
+- The original Python setup README is retained in [legacy guide](docs/legacy-python-setup.md) for
+  provenance. It is superseded by this runnable Node.js guide.
+
+No `tutor_bids`, Match entity, group-enrollment tables or invoice-items schema is invented.
+AI/Embedding stays in a [separate extension](prisma/ai-extension/README.md) with independent
+migrations. This work implements filtered discovery, not semantic AI recommendations.
+
+Monthly consolidated commission billing, group classes, Google OAuth, storage upload/transcoding,
+admin review of change requests and the rest of the booking/session/payment lifecycle belong to
+separate tasks. Existing BRD requirements remain intact and are not asserted to be supported by V2
+where persistence gaps exist. Media/evidence references require active owned `storage_files`
+records supplied by the storage module; clients cannot register arbitrary keys through these APIs.
+
+## Deployment
+
+```powershell
+npm run build
+npm start
+docker build -t tewsday-api .
 ```
 
-## Important
+Run migrations as a separate owner-credential deployment job, then run the non-root Docker image
+with the restricted runtime DB credentials, a strong JWT secret and Redis. Terminate HTTPS at the
+company reverse proxy and set `TRUST_PROXY_HOPS` to the exact trusted proxy count. Configure
+`CORS_ORIGINS` explicitly; production refuses wildcard origins, the example secret or absent Redis.
+Use separate test/staging/production databases and rotate credentials through your secret manager.
+Include the API documentation origin in `CORS_ORIGINS` when enabling Swagger's browser-based
+Try it out requests; the local sample includes both the frontend and `http://localhost:3000`.
 
-ไม่ต้อง commit ไฟล์ต่อไปนี้:
+PostGIS columns are `Unsupported` in Prisma and use parameterized Prisma SQL for geometry writes
+and meter-based spatial queries, following [Prisma's raw-query guidance](https://docs.prisma.io/docs/orm/prisma-client/using-raw-sql/safeql).
+Prisma is pinned to the compatible stable 6.12 line; upgrades require migration and integration
+verification. Commit the lockfile and run dependency audits in CI.
 
-```text
-.env
-node_modules/
-dist/
-```
+## Integration with the existing Auth implementation
 
-ไฟล์ที่ควร commit:
-
-```text
-package.json
-package-lock.json
-src/
-tsconfig.json
-.env.example
-.gitignore
-README.md
-```
+Auth keeps the existing `routes/auth.routes.ts`, `controllers/auth.controller.ts`,
+`services/auth.service.ts` and `repositories/session.repository.ts` entry points. All domain routes
+share `middleware/auth.ts`; `auth.middleware.ts` provides the compatible import path. Request identity
+is `req.actor` with durable session verification. `config.ts` and `db.ts` own the single environment
+and Prisma connection. Superseded `pg` repositories and token helpers have been consolidated into
+these entry points rather than leaving a second authentication implementation. Existing OAuth route
+continues to return 501 until the separate provider task is completed.

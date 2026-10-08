@@ -1,233 +1,76 @@
-import { Request, Response } from "express";
+import { Request, Response } from 'express';
+import { z } from 'zod';
+import { config } from '../config';
+import { ApiError } from '../common/errors';
+import { entityId } from '../common/ids';
+import * as service from '../services/auth.service';
 
-import * as authService
-  from "../services/auth.service";
-
-import { AuthRequest }
-  from "../middleware/auth.middleware";
-
-export async function register(
-  req: Request,
-  res: Response
-) {
-  try {
-    const {
-      email,
-      password,
-      confirm_password,
-    } = req.body;
-
-    if (
-      !email ||
-      !password ||
-      !confirm_password
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields",
-      });
-    }
-
-    if (
-      password !== confirm_password
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Password confirmation does not match",
-      });
-    }
-
-    const user =
-      await authService.register(
-        email,
-        password
-      );
-
-    return res.status(201).json({
-      success: true,
-      message:
-        "User registered successfully",
-      data: {
-        user_id: user.id,
-        email: user.email,
-        created_at: user.created_at,
-      },
-    });
-
-  } catch (error: any) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-}
-
-export async function login(
-  req: Request,
-  res: Response
-) {
-  try {
-    const {
-      email,
-      password,
-    } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Email and password are required",
-      });
-    }
-
-    const userAgent =
-      req.headers["user-agent"] || null;
-
-    const ipAddress =
-      req.ip || null;
-
-    const result =
-      await authService.login(
-        email,
-        password,
-        null,
-        ipAddress,
-        userAgent
-      );
-
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
-
-  } catch (error: any) {
-    return res.status(401).json({
-      success: false,
-      message: error.message,
-    });
-  }
-}
-
-export async function refreshToken(
-  req: Request,
-  res: Response
-) {
-  try {
-    const {
-      refresh_token,
-    } = req.body;
-
-    if (!refresh_token) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Refresh token is required",
-      });
-    }
-
-    const result =
-      await authService.refreshToken(
-        refresh_token
-      );
-
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
-
-  } catch (error: any) {
-    return res.status(401).json({
-      success: false,
-      message: error.message,
-    });
-  }
-}
-
-export async function logout(
-  req: AuthRequest,
-  res: Response
-) {
-  try {
-    await authService.logout(
-      req.user!.session_id
-    );
-
-    return res.status(200).json({
-      success: true,
-      message:
-        "Successfully logged out from current session",
-    });
-
-  } catch {
-    return res.status(500).json({
-      success: false,
-      message: "Logout failed",
-    });
-  }
-}
-
-export async function getSessions(
-  req: AuthRequest,
-  res: Response
-) {
-  try {
-    const sessions =
-      await authService.getSessions(
-        req.user!.user_id,
-        req.user!.session_id
-      );
-
-    return res.status(200).json({
-      success: true,
-      data: sessions,
-    });
-
-  } catch {
-    return res.status(500).json({
-      success: false,
-      message:
-        "Failed to get sessions",
-    });
-  }
-}
-
-export async function forceLogout(
-  req: AuthRequest,
-  res: Response
-) {
-  try {
-    const { id } = req.params;
-
-if (!id || Array.isArray(id)) {
-  return res.status(400).json({
-    success: false,
-    message: "Invalid session id",
-  });
-}
-
-const revoked =
-  await authService.forceLogout(
-    req.user!.user_id,
-    id
+export const credentials = z
+  .object({ email: z.email().max(255), password: z.string().min(10).max(128) })
+  .strict();
+export const registrationCredentials = credentials
+  .extend({ confirm_password: z.string().max(128).optional() })
+  .refine(
+    (body) => body.confirm_password === undefined || body.confirm_password === body.password,
+    { message: 'Password confirmation does not match', path: ['confirm_password'] },
   );
-
-  } catch {
-    return res.status(500).json({
-      success: false,
-      message:
-        "Failed to revoke session",
-    });
-  }
-}
-
-export async function oauthLogin(
-  req: Request,
-  res: Response
+export const loginCredentials = credentials.extend({ password: z.string().min(1).max(128) });
+const cookieOptions = {
+  httpOnly: true,
+  secure: config.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  path: '/api/v1/auth',
+  maxAge: 7 * 86400000,
+};
+function sendTokens(
+  res: Response,
+  tokens: Awaited<ReturnType<typeof service.login>>,
+  status = 200,
 ) {
-  return res.status(501).json({
-    success: false,
-    message:
-      "OAuth login is not implemented yet",
+  res.cookie('refresh_token', tokens.refreshToken, cookieOptions);
+  res.status(status).json({
+    data: {
+      access_token: tokens.access_token,
+      expires_in: tokens.expires_in,
+      token_type: 'Bearer',
+    },
   });
+}
+export async function register(req: Request, res: Response) {
+  const body = registrationCredentials.parse(req.body);
+  sendTokens(
+    res,
+    await service.register(body.email, body.password, req.headers['user-agent']),
+    201,
+  );
+}
+export async function login(req: Request, res: Response) {
+  const body = loginCredentials.parse(req.body);
+  sendTokens(res, await service.login(body.email, body.password, req.headers['user-agent']));
+}
+export async function refreshToken(req: Request, res: Response) {
+  const token: unknown = req.cookies?.refresh_token;
+  if (typeof token !== 'string')
+    throw new ApiError(401, 'INVALID_REFRESH', 'Refresh cookie required');
+  sendTokens(res, await service.refresh(token));
+}
+export async function logout(req: Request, res: Response) {
+  await service.logout(req.actor.userId, req.actor.sessionId);
+  res.clearCookie('refresh_token', cookieOptions).status(204).end();
+}
+export async function getSessions(req: Request, res: Response) {
+  res.json({ data: await service.getSessions(req.actor.userId, req.actor.sessionId) });
+}
+export async function forceLogout(req: Request, res: Response) {
+  const id = entityId('uss').parse(req.params.id);
+  await service.forceLogout(req.actor.userId, id);
+  if (id === req.actor.sessionId) res.clearCookie('refresh_token', cookieOptions);
+  res.status(204).end();
+}
+export async function oauthLogin(_req: Request, _res: Response) {
+  throw new ApiError(
+    501,
+    'OAUTH_NOT_IMPLEMENTED',
+    'OAuth login belongs to the separate Auth integration task',
+  );
 }

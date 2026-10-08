@@ -1,7 +1,7 @@
 export interface RegisterRequest {
   email: string;
   password: string;
-  confirm_password: string;
+  confirm_password?: string;
 }
 
 export interface LoginRequest {
@@ -9,9 +9,8 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface RefreshTokenRequest {
-  refresh_token: string;
-}
+// Refresh credentials come from the HttpOnly cookie, not the JSON request body.
+export type RefreshTokenRequest = Record<string, never>;
 
 export interface OAuthRequest {
   id_token: string;
@@ -25,6 +24,6 @@ export interface AuthUser {
 }
 
 export interface JwtPayload {
-  user_id: string;
-  session_id: string;
+  sub: string;
+  sid: string;
 }

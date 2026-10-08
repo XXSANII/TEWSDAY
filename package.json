@@ -1,42 +1,69 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "คู่มือติดตั้งและตั้งค่า Backend ของแพลตฟอร์มหาครูสอนพิเศษ ตั้งแต่เครื่อง Developer ไปจนถึง Production**สมมติฐานที่ผมตั้งเอง** (ปรับได้): Python 3.12, SQLAlchemy 2.x + Alembic, Redis ใช้ทั้ง Cache / Rate limit / Pub-Sub, Background worker ใช้ ARQ, S3 + CloudFront สำหรับไฟล์ และ AWS MediaConvert สำหรับแปลงวิดีโอเป็น HLS ข้อที่ยืนยันจากเอกสารเดิม: FastAPI, PostgreSQL + PostGIS, Redis, AWS S3, CloudFront CDN, ID แบบ Prefix ขนาด `VARCHAR(36)`",
-  "main": "index.js",
-  "type": "commonjs",
+  "name": "tewsday-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TewsDay modular Express API aligned with Database Schema V2",
+  "engines": {
+    "node": ">=20.19.0 <21 || >=22.13.0"
+  },
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "test": "jest --runInBand",
+    "test:unit": "jest --runInBand --testPathPatterns=unit",
+    "test:integration": "jest --runInBand --testPathPatterns=integration",
+    "test:coverage": "jest --runInBand --coverage",
+    "check": "npm run db:generate && npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run build"
+  },
+  "dependencies": {
+    "@prisma/client": "6.12.0",
+    "argon2": "^0.44.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "ioredis": "^5.8.2",
+    "jsonwebtoken": "^9.0.2",
+    "pino": "^10.1.0",
+    "pino-http": "^11.0.0",
+    "rate-limit-redis": "^4.2.3",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.1.12",
+    "bcrypt": "^6.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.19.0",
+    "@types/supertest": "^6.0.3",
+    "@types/swagger-ui-express": "^4.1.8",
+    "eslint": "^9.39.1",
+    "jest": "^30.2.0",
+    "prettier": "^3.6.2",
+    "prisma": "6.12.0",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.5",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "@types/bcrypt": "^6.0.0"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/XXSANII/TEWSDAY.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/XXSANII/TEWSDAY/issues"
-  },
-  "homepage": "https://github.com/XXSANII/TEWSDAY#readme",
-  "dependencies": {
-    "bcrypt": "^6.0.0",
-    "cors": "^2.8.6",
-    "dotenv": "^18.0.6",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "pg": "^8.23.1"
-  },
-  "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^26.6.4",
-    "@types/pg": "^8.23.1",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.3"
   }
 }

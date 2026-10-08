@@ -1,57 +1,13 @@
-import { Router } from "express";
-
-import {
-  register,
-  login,
-  oauthLogin,
-  refreshToken,
-  logout,
-  getSessions,
-  forceLogout,
-} from "../controllers/auth.controller";
-
-import {
-  authenticate,
-} from "../middleware/auth.middleware";
-
-const router = Router();
-
-router.post(
-  "/register",
-  register
-);
-
-router.post(
-  "/login",
-  login
-);
-
-router.post(
-  "/oauth/:provider",
-  oauthLogin
-);
-
-router.post(
-  "/refresh-token",
-  refreshToken
-);
-
-router.post(
-  "/logout",
-  authenticate,
-  logout
-);
-
-router.get(
-  "/sessions",
-  authenticate,
-  getSessions
-);
-
-router.delete(
-  "/sessions/:id",
-  authenticate,
-  forceLogout
-);
-
-export default router;
+import { Router } from 'express';
+import * as controller from '../controllers/auth.controller';
+import { authenticate } from '../middleware/auth';
+export const authRouter = Router();
+authRouter.post('/register', controller.register);
+authRouter.post('/login', controller.login);
+authRouter.post('/oauth/:provider', controller.oauthLogin);
+authRouter.post('/refresh', controller.refreshToken);
+authRouter.post('/refresh-token', controller.refreshToken);
+authRouter.post('/logout', authenticate, controller.logout);
+authRouter.get('/sessions', authenticate, controller.getSessions);
+authRouter.delete('/sessions/:id', authenticate, controller.forceLogout);
+export default authRouter;
