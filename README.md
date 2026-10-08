@@ -115,6 +115,8 @@ with the restricted runtime DB credentials, a strong JWT secret and Redis. Termi
 company reverse proxy and set `TRUST_PROXY_HOPS` to the exact trusted proxy count. Configure
 `CORS_ORIGINS` explicitly; production refuses wildcard origins, the example secret or absent Redis.
 Use separate test/staging/production databases and rotate credentials through your secret manager.
+Include the API documentation origin in `CORS_ORIGINS` when enabling Swagger's browser-based
+Try it out requests; the local sample includes both the frontend and `http://localhost:3000`.
 
 PostGIS columns are `Unsupported` in Prisma and use parameterized Prisma SQL for geometry writes
 and meter-based spatial queries, following [Prisma's raw-query guidance](https://docs.prisma.io/docs/orm/prisma-client/using-raw-sql/safeql).
