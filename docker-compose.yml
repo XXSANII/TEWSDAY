@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: tewsday_owner
+      POSTGRES_PASSWORD: local_owner_only
+      POSTGRES_DB: tewsday
+    ports: ['127.0.0.1:55432:5432']
+    volumes: ['tewsday_pg:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U tewsday_owner -d tewsday']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    ports: ['127.0.0.1:56379:6379']
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes: ['tewsday_redis:/data']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  test-db:
+    image: postgis/postgis:16-3.4
+    profiles: ['test']
+    environment:
+      POSTGRES_USER: tewsday_owner
+      POSTGRES_PASSWORD: local_owner_only
+      POSTGRES_DB: tewsday_test
+    ports: ['127.0.0.1:55433:5432']
+    tmpfs: ['/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U tewsday_owner -d tewsday_test']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  tewsday_pg:
+  tewsday_redis:

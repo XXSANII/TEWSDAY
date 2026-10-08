@@ -1,0 +1,56 @@
+name: API checks
+on:
+  pull_request:
+  push:
+    branches: [main, 'feat/**']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd 'redis-cli ping'
+          --health-interval 5s --health-timeout 3s --health-retries 20
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: tewsday_owner
+          POSTGRES_PASSWORD: ci_test_only
+          POSTGRES_DB: tewsday_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U tewsday_owner -d tewsday_test'
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://tewsday_owner:ci_test_only@localhost:5432/tewsday_test?schema=public
+      JWT_SECRET: ci-test-secret-only-at-least-32-characters
+      CORS_ORIGINS: http://localhost:5173
+      LOG_LEVEL: silent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run check
+      - run: npm audit --omit=dev
+      - run: docker build -t tewsday-api:ci .
+      - name: Boot the production image with PostgreSQL and Redis
+        run: |
+          docker run -d --name tewsday-smoke --network host \
+            -e NODE_ENV=production -e DATABASE_URL -e JWT_SECRET -e CORS_ORIGINS -e LOG_LEVEL \
+            -e REDIS_URL=redis://localhost:6379 tewsday-api:ci
+          trap 'docker rm -f tewsday-smoke' EXIT
+          for attempt in $(seq 1 15); do
+            if curl --fail --silent http://localhost:3000/health; then exit 0; fi
+            sleep 2
+          done
+          docker logs tewsday-smoke
+          exit 1

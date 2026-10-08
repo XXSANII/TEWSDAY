@@ -1,0 +1,1820 @@
+{
+  "users": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "email",
+      "type": "VARCHAR(255)",
+      "nullable": false
+    },
+    {
+      "name": "email_verified_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "phone_number",
+      "type": "VARCHAR(30)",
+      "nullable": true
+    },
+    {
+      "name": "phone_verified_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "avatar_file_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "roles",
+      "type": "VARCHAR(20)[]",
+      "nullable": false
+    },
+    {
+      "name": "current_mode",
+      "type": "\"users_current_mode_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "notification_settings",
+      "type": "JSONB",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "user_auth_providers": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "user_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "provider",
+      "type": "\"user_auth_providers_provider_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "provider_user_id",
+      "type": "VARCHAR(255)",
+      "nullable": true
+    },
+    {
+      "name": "password_hash",
+      "type": "VARCHAR(255)",
+      "nullable": true
+    },
+    {
+      "name": "metadata",
+      "type": "JSONB",
+      "nullable": true
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "user_sessions": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "user_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "refresh_token_hash",
+      "type": "VARCHAR(255)",
+      "nullable": false
+    },
+    {
+      "name": "device_name",
+      "type": "VARCHAR(100)",
+      "nullable": true
+    },
+    {
+      "name": "ip_address",
+      "type": "INET",
+      "nullable": true
+    },
+    {
+      "name": "user_agent",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "expires_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "is_revoked",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "revoked_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "last_active_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "tutor_profiles": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "user_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "first_name",
+      "type": "VARCHAR(100)",
+      "nullable": false
+    },
+    {
+      "name": "last_name",
+      "type": "VARCHAR(100)",
+      "nullable": false
+    },
+    {
+      "name": "gender",
+      "type": "\"tutor_profiles_gender_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "bio",
+      "type": "TEXT",
+      "nullable": false
+    },
+    {
+      "name": "hourly_rate",
+      "type": "NUMERIC(10,2)",
+      "nullable": false
+    },
+    {
+      "name": "teaching_location_type",
+      "type": "\"tutor_profiles_teaching_location_type_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "location",
+      "type": "GEOMETRY(Point, 4326)",
+      "nullable": false
+    },
+    {
+      "name": "service_radius_km",
+      "type": "NUMERIC(6,2)",
+      "nullable": false
+    },
+    {
+      "name": "promptpay_identifier",
+      "type": "VARCHAR(50)",
+      "nullable": true
+    },
+    {
+      "name": "bank_code",
+      "type": "VARCHAR(20)",
+      "nullable": true
+    },
+    {
+      "name": "bank_account_number",
+      "type": "VARCHAR(50)",
+      "nullable": true
+    },
+    {
+      "name": "bank_account_name",
+      "type": "VARCHAR(150)",
+      "nullable": true
+    },
+    {
+      "name": "intro_video_file_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "intro_video_thumbnail_file_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "intro_video_hls_url",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "intro_video_status",
+      "type": "VARCHAR(20)",
+      "nullable": false
+    },
+    {
+      "name": "verification_status",
+      "type": "\"tutor_profiles_verification_status_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "account_status",
+      "type": "\"tutor_profiles_account_status_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "account_status_reason",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "account_status_updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "student_profiles": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "user_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "first_name",
+      "type": "VARCHAR(100)",
+      "nullable": false
+    },
+    {
+      "name": "last_name",
+      "type": "VARCHAR(100)",
+      "nullable": false
+    },
+    {
+      "name": "current_grade_level",
+      "type": "VARCHAR(50)",
+      "nullable": false
+    },
+    {
+      "name": "school_name",
+      "type": "VARCHAR(150)",
+      "nullable": false
+    },
+    {
+      "name": "location",
+      "type": "GEOMETRY(Point, 4326)",
+      "nullable": false
+    },
+    {
+      "name": "parent_name",
+      "type": "VARCHAR(150)",
+      "nullable": true
+    },
+    {
+      "name": "parent_phone_number",
+      "type": "VARCHAR(30)",
+      "nullable": true
+    },
+    {
+      "name": "parent_relationship",
+      "type": "VARCHAR(50)",
+      "nullable": true
+    },
+    {
+      "name": "emergency_contact_name",
+      "type": "VARCHAR(150)",
+      "nullable": true
+    },
+    {
+      "name": "emergency_contact_phone",
+      "type": "VARCHAR(30)",
+      "nullable": true
+    },
+    {
+      "name": "emergency_contact_relationship",
+      "type": "VARCHAR(50)",
+      "nullable": true
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "subjects": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "name_th",
+      "type": "VARCHAR(100)",
+      "nullable": false
+    },
+    {
+      "name": "name_en",
+      "type": "VARCHAR(100)",
+      "nullable": false
+    },
+    {
+      "name": "category",
+      "type": "VARCHAR(50)",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "tutor_subjects": [
+    {
+      "name": "tutor_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "subject_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "grade_levels",
+      "type": "VARCHAR(50)[]",
+      "nullable": false
+    },
+    {
+      "name": "specialized_topics",
+      "type": "TEXT[]",
+      "nullable": false
+    },
+    {
+      "name": "custom_rate",
+      "type": "NUMERIC(10,2)",
+      "nullable": true
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "tutor_education": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "tutor_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "institution",
+      "type": "VARCHAR(150)",
+      "nullable": false
+    },
+    {
+      "name": "degree",
+      "type": "VARCHAR(150)",
+      "nullable": false
+    },
+    {
+      "name": "major",
+      "type": "VARCHAR(150)",
+      "nullable": false
+    },
+    {
+      "name": "graduation_year",
+      "type": "SMALLINT",
+      "nullable": false
+    },
+    {
+      "name": "verification_document_file_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "is_verified",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "tutor_availability": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "tutor_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "is_recurring",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "day_of_week",
+      "type": "SMALLINT",
+      "nullable": true
+    },
+    {
+      "name": "specific_date",
+      "type": "DATE",
+      "nullable": true
+    },
+    {
+      "name": "start_time",
+      "type": "TIME",
+      "nullable": false
+    },
+    {
+      "name": "end_time",
+      "type": "TIME",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "profile_change_requests": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "tutor_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "user_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "request_type",
+      "type": "\"profile_change_requests_request_type_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "current_data",
+      "type": "JSONB",
+      "nullable": false
+    },
+    {
+      "name": "requested_changes",
+      "type": "JSONB",
+      "nullable": false
+    },
+    {
+      "name": "supporting_document_file_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "\"profile_change_requests_status_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "rejection_reason",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "reviewed_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "reviewed_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "storage_files": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "bucket_name",
+      "type": "VARCHAR(100)",
+      "nullable": false
+    },
+    {
+      "name": "file_key",
+      "type": "TEXT",
+      "nullable": false
+    },
+    {
+      "name": "file_name",
+      "type": "VARCHAR(255)",
+      "nullable": false
+    },
+    {
+      "name": "mime_type",
+      "type": "VARCHAR(100)",
+      "nullable": false
+    },
+    {
+      "name": "file_size_bytes",
+      "type": "BIGINT",
+      "nullable": false
+    },
+    {
+      "name": "file_category",
+      "type": "\"storage_files_file_category_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "student_jobs": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "student_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "subject_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "target_grade_level",
+      "type": "VARCHAR(50)",
+      "nullable": false
+    },
+    {
+      "name": "target_topics",
+      "type": "TEXT[]",
+      "nullable": false
+    },
+    {
+      "name": "learning_goal",
+      "type": "TEXT",
+      "nullable": false
+    },
+    {
+      "name": "budget_min",
+      "type": "NUMERIC(10,2)",
+      "nullable": false
+    },
+    {
+      "name": "budget_max",
+      "type": "NUMERIC(10,2)",
+      "nullable": false
+    },
+    {
+      "name": "location_type",
+      "type": "\"student_jobs_location_type_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "location",
+      "type": "GEOMETRY(Point, 4326)",
+      "nullable": true
+    },
+    {
+      "name": "frequency_per_week",
+      "type": "SMALLINT",
+      "nullable": false
+    },
+    {
+      "name": "preferred_days",
+      "type": "SMALLINT[]",
+      "nullable": false
+    },
+    {
+      "name": "status",
+      "type": "\"student_jobs_status_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "share_count",
+      "type": "INTEGER",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "job_applications": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "job_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "tutor_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "proposed_rate",
+      "type": "NUMERIC(10,2)",
+      "nullable": false
+    },
+    {
+      "name": "cover_message",
+      "type": "TEXT",
+      "nullable": false
+    },
+    {
+      "name": "status",
+      "type": "\"job_applications_status_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "bookings": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "student_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "tutor_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "subject_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "originating_job_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "agreed_hourly_rate",
+      "type": "NUMERIC(10,2)",
+      "nullable": false
+    },
+    {
+      "name": "location_type",
+      "type": "\"bookings_location_type_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "meeting_location",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "meeting_url",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "signed_contract_file_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "contract_uploaded_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "\"bookings_status_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "class_sessions": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "booking_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "student_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "tutor_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "scheduled_start",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "scheduled_end",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "actual_start",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "actual_end",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "hourly_rate",
+      "type": "NUMERIC(10,2)",
+      "nullable": false
+    },
+    {
+      "name": "duration_minutes",
+      "type": "SMALLINT",
+      "nullable": false
+    },
+    {
+      "name": "gross_amount",
+      "type": "NUMERIC(10,2)",
+      "nullable": false
+    },
+    {
+      "name": "session_feedback",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "homework_assigned",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "\"class_sessions_status_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "payment_status",
+      "type": "\"class_sessions_payment_status_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "dispute_reason",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "student_confirmed_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "tutor_confirmed_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "invoices": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "invoice_number",
+      "type": "VARCHAR(50)",
+      "nullable": false
+    },
+    {
+      "name": "invoice_type",
+      "type": "\"invoices_invoice_type_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "booking_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "class_session_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "payer_user_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "payee_user_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "amount",
+      "type": "NUMERIC(10,2)",
+      "nullable": false
+    },
+    {
+      "name": "commission_fee",
+      "type": "NUMERIC(10,2)",
+      "nullable": false
+    },
+    {
+      "name": "status",
+      "type": "\"invoices_status_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "payment_method",
+      "type": "\"invoices_payment_method_enum\"",
+      "nullable": true
+    },
+    {
+      "name": "slip_file_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "due_date",
+      "type": "DATE",
+      "nullable": true
+    },
+    {
+      "name": "paid_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "verified_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "conversations": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "booking_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "student_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "tutor_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "last_message_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "messages": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "conversation_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "sender_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "content",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "message_type",
+      "type": "\"messages_message_type_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "file_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "thumbnail_file_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "is_read",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "reviews": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "class_session_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "reviewer_user_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "reviewee_user_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "review_type",
+      "type": "VARCHAR(20)",
+      "nullable": false
+    },
+    {
+      "name": "tutor_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "rating_score",
+      "type": "SMALLINT",
+      "nullable": false
+    },
+    {
+      "name": "comment",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "is_published",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "notifications": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "user_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "title",
+      "type": "VARCHAR(150)",
+      "nullable": false
+    },
+    {
+      "name": "body",
+      "type": "TEXT",
+      "nullable": false
+    },
+    {
+      "name": "type",
+      "type": "VARCHAR(50)",
+      "nullable": false
+    },
+    {
+      "name": "priority_tier",
+      "type": "\"notifications_priority_tier_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "reference_type",
+      "type": "VARCHAR(50)",
+      "nullable": true
+    },
+    {
+      "name": "reference_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "is_read",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "user_activity_logs": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "user_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "browser_session_id",
+      "type": "VARCHAR(100)",
+      "nullable": false
+    },
+    {
+      "name": "event_name",
+      "type": "VARCHAR(100)",
+      "nullable": false
+    },
+    {
+      "name": "page_path",
+      "type": "VARCHAR(255)",
+      "nullable": false
+    },
+    {
+      "name": "element_id",
+      "type": "VARCHAR(100)",
+      "nullable": true
+    },
+    {
+      "name": "metadata",
+      "type": "JSONB",
+      "nullable": true
+    },
+    {
+      "name": "ip_address",
+      "type": "INET",
+      "nullable": true
+    },
+    {
+      "name": "user_agent",
+      "type": "TEXT",
+      "nullable": true
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "entity_audit_logs": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "table_name",
+      "type": "VARCHAR(64)",
+      "nullable": false
+    },
+    {
+      "name": "record_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "action",
+      "type": "\"entity_audit_logs_action_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "old_data",
+      "type": "JSONB",
+      "nullable": true
+    },
+    {
+      "name": "new_data",
+      "type": "JSONB",
+      "nullable": true
+    },
+    {
+      "name": "changed_fields",
+      "type": "JSONB",
+      "nullable": true
+    },
+    {
+      "name": "changed_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "student_questions": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "student_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "subject_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "target_topics",
+      "type": "TEXT[]",
+      "nullable": false
+    },
+    {
+      "name": "title",
+      "type": "VARCHAR(200)",
+      "nullable": false
+    },
+    {
+      "name": "content",
+      "type": "TEXT",
+      "nullable": false
+    },
+    {
+      "name": "question_image_file_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "\"student_questions_status_enum\"",
+      "nullable": false
+    },
+    {
+      "name": "view_count",
+      "type": "INTEGER",
+      "nullable": false
+    },
+    {
+      "name": "answers_count",
+      "type": "INTEGER",
+      "nullable": false
+    },
+    {
+      "name": "share_count",
+      "type": "INTEGER",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ],
+  "question_answers": [
+    {
+      "name": "id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "question_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "tutor_id",
+      "type": "VARCHAR(36)",
+      "nullable": false
+    },
+    {
+      "name": "content",
+      "type": "TEXT",
+      "nullable": false
+    },
+    {
+      "name": "solution_file_id",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "is_accepted",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "accepted_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": true
+    },
+    {
+      "name": "upvote_count",
+      "type": "INTEGER",
+      "nullable": false
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "nullable": false
+    },
+    {
+      "name": "created_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "updated_by",
+      "type": "VARCHAR(36)",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "TIMESTAMPTZ",
+      "nullable": false
+    }
+  ]
+}

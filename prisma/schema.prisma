@@ -1,0 +1,826 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model bookings {
+  id                               String                      @id @db.VarChar(36)
+  student_id                       String                      @db.VarChar(36)
+  tutor_id                         String                      @db.VarChar(36)
+  subject_id                       String                      @db.VarChar(36)
+  originating_job_id               String?                     @db.VarChar(36)
+  agreed_hourly_rate               Decimal                     @db.Decimal(10, 2)
+  location_type                    bookings_location_type_enum
+  meeting_location                 String?
+  meeting_url                      String?
+  signed_contract_file_id          String?                     @db.VarChar(36)
+  contract_uploaded_at             DateTime?                   @db.Timestamptz(6)
+  status                           bookings_status_enum
+  is_active                        Boolean                     @default(true)
+  created_by                       String?                     @db.VarChar(36)
+  updated_by                       String?                     @db.VarChar(36)
+  created_at                       DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                       DateTime                    @default(now()) @db.Timestamptz(6)
+  users_bookings_created_byTousers users?                      @relation("bookings_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  student_jobs                     student_jobs?               @relation(fields: [originating_job_id], references: [id], onDelete: Restrict)
+  storage_files                    storage_files?              @relation(fields: [signed_contract_file_id], references: [id], onDelete: Restrict)
+  student_profiles                 student_profiles            @relation(fields: [student_id], references: [id])
+  subjects                         subjects                    @relation(fields: [subject_id], references: [id])
+  tutor_profiles                   tutor_profiles              @relation(fields: [tutor_id], references: [id])
+  users_bookings_updated_byTousers users?                      @relation("bookings_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  class_sessions                   class_sessions[]
+  conversations                    conversations[]
+  invoices                         invoices[]
+
+  @@index([originating_job_id, student_id, tutor_id], map: "booking_job_lookup")
+}
+
+model class_sessions {
+  id                                     String                             @id @db.VarChar(36)
+  booking_id                             String                             @db.VarChar(36)
+  student_id                             String                             @db.VarChar(36)
+  tutor_id                               String                             @db.VarChar(36)
+  scheduled_start                        DateTime                           @db.Timestamptz(6)
+  scheduled_end                          DateTime                           @db.Timestamptz(6)
+  actual_start                           DateTime?                          @db.Timestamptz(6)
+  actual_end                             DateTime?                          @db.Timestamptz(6)
+  hourly_rate                            Decimal                            @db.Decimal(10, 2)
+  duration_minutes                       Int                                @default(60) @db.SmallInt
+  gross_amount                           Decimal                            @db.Decimal(10, 2)
+  session_feedback                       String?
+  homework_assigned                      String?
+  status                                 class_sessions_status_enum
+  payment_status                         class_sessions_payment_status_enum
+  dispute_reason                         String?
+  student_confirmed_at                   DateTime?                          @db.Timestamptz(6)
+  tutor_confirmed_at                     DateTime?                          @db.Timestamptz(6)
+  is_active                              Boolean                            @default(true)
+  created_by                             String?                            @db.VarChar(36)
+  updated_by                             String?                            @db.VarChar(36)
+  created_at                             DateTime                           @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime                           @default(now()) @db.Timestamptz(6)
+  bookings                               bookings                           @relation(fields: [booking_id], references: [id])
+  users_class_sessions_created_byTousers users?                             @relation("class_sessions_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  student_profiles                       student_profiles                   @relation(fields: [student_id], references: [id])
+  tutor_profiles                         tutor_profiles                     @relation(fields: [tutor_id], references: [id])
+  users_class_sessions_updated_byTousers users?                             @relation("class_sessions_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  invoices                               invoices[]
+  reviews                                reviews[]
+}
+
+model conversations {
+  id                                    String           @id @db.VarChar(36)
+  booking_id                            String?          @db.VarChar(36)
+  student_id                            String           @db.VarChar(36)
+  tutor_id                              String           @db.VarChar(36)
+  last_message_at                       DateTime?        @db.Timestamptz(6)
+  is_active                             Boolean          @default(true)
+  created_by                            String?          @db.VarChar(36)
+  updated_by                            String?          @db.VarChar(36)
+  created_at                            DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime         @default(now()) @db.Timestamptz(6)
+  bookings                              bookings?        @relation(fields: [booking_id], references: [id], onDelete: Restrict)
+  users_conversations_created_byTousers users?           @relation("conversations_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  student_profiles                      student_profiles @relation(fields: [student_id], references: [id])
+  tutor_profiles                        tutor_profiles   @relation(fields: [tutor_id], references: [id])
+  users_conversations_updated_byTousers users?           @relation("conversations_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  messages                              messages[]
+}
+
+model entity_audit_logs {
+  id                                        String                        @id @db.VarChar(36)
+  table_name                                String                        @db.VarChar(64)
+  record_id                                 String                        @db.VarChar(36)
+  action                                    entity_audit_logs_action_enum
+  old_data                                  Json?
+  new_data                                  Json?
+  changed_fields                            Json?
+  changed_by                                String?                       @db.VarChar(36)
+  is_active                                 Boolean                       @default(true)
+  created_by                                String?                       @db.VarChar(36)
+  updated_by                                String?                       @db.VarChar(36)
+  created_at                                DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime                      @default(now()) @db.Timestamptz(6)
+  users_entity_audit_logs_changed_byTousers users?                        @relation("entity_audit_logs_changed_byTousers", fields: [changed_by], references: [id], onDelete: Restrict)
+  users_entity_audit_logs_created_byTousers users?                        @relation("entity_audit_logs_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  users_entity_audit_logs_updated_byTousers users?                        @relation("entity_audit_logs_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+
+  @@index([table_name, record_id, created_at], map: "audit_lookup")
+}
+
+model invoices {
+  id                                  String                        @id @db.VarChar(36)
+  invoice_number                      String                        @unique @db.VarChar(50)
+  invoice_type                        invoices_invoice_type_enum
+  booking_id                          String?                       @db.VarChar(36)
+  class_session_id                    String?                       @db.VarChar(36)
+  payer_user_id                       String                        @db.VarChar(36)
+  payee_user_id                       String                        @db.VarChar(36)
+  amount                              Decimal                       @db.Decimal(10, 2)
+  commission_fee                      Decimal                       @default(0) @db.Decimal(10, 2)
+  status                              invoices_status_enum          @default(UNPAID)
+  payment_method                      invoices_payment_method_enum?
+  slip_file_id                        String?                       @db.VarChar(36)
+  due_date                            DateTime?                     @db.Date
+  paid_at                             DateTime?                     @db.Timestamptz(6)
+  verified_by                         String?                       @db.VarChar(36)
+  is_active                           Boolean                       @default(true)
+  created_by                          String?                       @db.VarChar(36)
+  updated_by                          String?                       @db.VarChar(36)
+  created_at                          DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime                      @default(now()) @db.Timestamptz(6)
+  bookings                            bookings?                     @relation(fields: [booking_id], references: [id], onDelete: Restrict)
+  class_sessions                      class_sessions?               @relation(fields: [class_session_id], references: [id], onDelete: Restrict)
+  users_invoices_created_byTousers    users?                        @relation("invoices_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  users_invoices_payee_user_idTousers users                         @relation("invoices_payee_user_idTousers", fields: [payee_user_id], references: [id])
+  users_invoices_payer_user_idTousers users                         @relation("invoices_payer_user_idTousers", fields: [payer_user_id], references: [id])
+  storage_files                       storage_files?                @relation(fields: [slip_file_id], references: [id], onDelete: Restrict)
+  users_invoices_updated_byTousers    users?                        @relation("invoices_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  users_invoices_verified_byTousers   users?                        @relation("invoices_verified_byTousers", fields: [verified_by], references: [id], onDelete: Restrict)
+}
+
+model job_applications {
+  id                                       String                       @id @db.VarChar(36)
+  job_id                                   String                       @db.VarChar(36)
+  tutor_id                                 String                       @db.VarChar(36)
+  proposed_rate                            Decimal                      @db.Decimal(10, 2)
+  cover_message                            String
+  status                                   job_applications_status_enum
+  is_active                                Boolean                      @default(true)
+  created_by                               String?                      @db.VarChar(36)
+  updated_by                               String?                      @db.VarChar(36)
+  created_at                               DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime                     @default(now()) @db.Timestamptz(6)
+  users_job_applications_created_byTousers users?                       @relation("job_applications_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  student_jobs                             student_jobs                 @relation(fields: [job_id], references: [id])
+  tutor_profiles                           tutor_profiles               @relation(fields: [tutor_id], references: [id])
+  users_job_applications_updated_byTousers users?                       @relation("job_applications_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+
+  @@index([job_id, tutor_id], map: "application_lookup")
+}
+
+model messages {
+  id                                                      String                     @id @db.VarChar(36)
+  conversation_id                                         String                     @db.VarChar(36)
+  sender_id                                               String                     @db.VarChar(36)
+  content                                                 String?
+  message_type                                            messages_message_type_enum @default(TEXT)
+  file_id                                                 String?                    @db.VarChar(36)
+  thumbnail_file_id                                       String?                    @db.VarChar(36)
+  is_read                                                 Boolean                    @default(false)
+  is_active                                               Boolean                    @default(true)
+  created_by                                              String?                    @db.VarChar(36)
+  updated_by                                              String?                    @db.VarChar(36)
+  created_at                                              DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                                              DateTime                   @default(now()) @db.Timestamptz(6)
+  conversations                                           conversations              @relation(fields: [conversation_id], references: [id])
+  users_messages_created_byTousers                        users?                     @relation("messages_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  storage_files_messages_file_idTostorage_files           storage_files?             @relation("messages_file_idTostorage_files", fields: [file_id], references: [id], onDelete: Restrict)
+  users_messages_sender_idTousers                         users                      @relation("messages_sender_idTousers", fields: [sender_id], references: [id])
+  storage_files_messages_thumbnail_file_idTostorage_files storage_files?             @relation("messages_thumbnail_file_idTostorage_files", fields: [thumbnail_file_id], references: [id], onDelete: Restrict)
+  users_messages_updated_byTousers                        users?                     @relation("messages_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+}
+
+model notifications {
+  id                                    String                           @id @db.VarChar(36)
+  user_id                               String                           @db.VarChar(36)
+  title                                 String                           @db.VarChar(150)
+  body                                  String
+  type                                  String                           @db.VarChar(50)
+  priority_tier                         notifications_priority_tier_enum @default(NORMAL)
+  reference_type                        String?                          @db.VarChar(50)
+  reference_id                          String?                          @db.VarChar(36)
+  is_read                               Boolean                          @default(false)
+  is_active                             Boolean                          @default(true)
+  created_by                            String?                          @db.VarChar(36)
+  updated_by                            String?                          @db.VarChar(36)
+  created_at                            DateTime                         @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime                         @default(now()) @db.Timestamptz(6)
+  users_notifications_created_byTousers users?                           @relation("notifications_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  users_notifications_updated_byTousers users?                           @relation("notifications_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  users_notifications_user_idTousers    users                            @relation("notifications_user_idTousers", fields: [user_id], references: [id])
+}
+
+model profile_change_requests {
+  id                                               String                                    @id @db.VarChar(36)
+  tutor_id                                         String                                    @db.VarChar(36)
+  user_id                                          String                                    @db.VarChar(36)
+  request_type                                     profile_change_requests_request_type_enum
+  current_data                                     Json
+  requested_changes                                Json
+  supporting_document_file_id                      String?                                   @db.VarChar(36)
+  status                                           profile_change_requests_status_enum       @default(PENDING)
+  rejection_reason                                 String?
+  reviewed_by                                      String?                                   @db.VarChar(36)
+  reviewed_at                                      DateTime?                                 @db.Timestamptz(6)
+  is_active                                        Boolean                                   @default(true)
+  created_by                                       String?                                   @db.VarChar(36)
+  updated_by                                       String?                                   @db.VarChar(36)
+  created_at                                       DateTime                                  @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime                                  @default(now()) @db.Timestamptz(6)
+  users_profile_change_requests_created_byTousers  users?                                    @relation("profile_change_requests_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  users_profile_change_requests_reviewed_byTousers users?                                    @relation("profile_change_requests_reviewed_byTousers", fields: [reviewed_by], references: [id], onDelete: Restrict)
+  storage_files                                    storage_files?                            @relation(fields: [supporting_document_file_id], references: [id], onDelete: Restrict)
+  tutor_profiles                                   tutor_profiles                            @relation(fields: [tutor_id], references: [id])
+  users_profile_change_requests_updated_byTousers  users?                                    @relation("profile_change_requests_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  users_profile_change_requests_user_idTousers     users                                     @relation("profile_change_requests_user_idTousers", fields: [user_id], references: [id])
+}
+
+model question_answers {
+  id                                       String            @id @db.VarChar(36)
+  question_id                              String            @db.VarChar(36)
+  tutor_id                                 String            @db.VarChar(36)
+  content                                  String
+  solution_file_id                         String?           @db.VarChar(36)
+  is_accepted                              Boolean           @default(false)
+  accepted_at                              DateTime?         @db.Timestamptz(6)
+  upvote_count                             Int               @default(0)
+  is_active                                Boolean           @default(true)
+  created_by                               String?           @db.VarChar(36)
+  updated_by                               String?           @db.VarChar(36)
+  created_at                               DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime          @default(now()) @db.Timestamptz(6)
+  users_question_answers_created_byTousers users?            @relation("question_answers_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  student_questions                        student_questions @relation(fields: [question_id], references: [id])
+  storage_files                            storage_files?    @relation(fields: [solution_file_id], references: [id], onDelete: Restrict)
+  tutor_profiles                           tutor_profiles    @relation(fields: [tutor_id], references: [id])
+  users_question_answers_updated_byTousers users?            @relation("question_answers_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reviews {
+  id                                    String          @id @db.VarChar(36)
+  class_session_id                      String          @db.VarChar(36)
+  reviewer_user_id                      String          @db.VarChar(36)
+  reviewee_user_id                      String          @db.VarChar(36)
+  review_type                           String          @db.VarChar(20)
+  tutor_id                              String?         @db.VarChar(36)
+  rating_score                          Int             @db.SmallInt
+  comment                               String?
+  is_published                          Boolean         @default(true)
+  is_active                             Boolean         @default(true)
+  created_by                            String?         @db.VarChar(36)
+  updated_by                            String?         @db.VarChar(36)
+  created_at                            DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime        @default(now()) @db.Timestamptz(6)
+  class_sessions                        class_sessions  @relation(fields: [class_session_id], references: [id])
+  users_reviews_created_byTousers       users?          @relation("reviews_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  users_reviews_reviewee_user_idTousers users           @relation("reviews_reviewee_user_idTousers", fields: [reviewee_user_id], references: [id])
+  users_reviews_reviewer_user_idTousers users           @relation("reviews_reviewer_user_idTousers", fields: [reviewer_user_id], references: [id])
+  tutor_profiles                        tutor_profiles? @relation(fields: [tutor_id], references: [id], onDelete: Restrict)
+  users_reviews_updated_byTousers       users?          @relation("reviews_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
+}
+
+model storage_files {
+  id                                                                         String                           @id @db.VarChar(36)
+  bucket_name                                                                String                           @db.VarChar(100)
+  file_key                                                                   String                           @unique
+  file_name                                                                  String                           @db.VarChar(255)
+  mime_type                                                                  String                           @db.VarChar(100)
+  file_size_bytes                                                            BigInt
+  file_category                                                              storage_files_file_category_enum
+  is_active                                                                  Boolean                          @default(true)
+  created_by                                                                 String?                          @db.VarChar(36)
+  updated_by                                                                 String?                          @db.VarChar(36)
+  created_at                                                                 DateTime                         @default(now()) @db.Timestamptz(6)
+  updated_at                                                                 DateTime                         @default(now()) @db.Timestamptz(6)
+  bookings                                                                   bookings[]
+  invoices                                                                   invoices[]
+  messages_messages_file_idTostorage_files                                   messages[]                       @relation("messages_file_idTostorage_files")
+  messages_messages_thumbnail_file_idTostorage_files                         messages[]                       @relation("messages_thumbnail_file_idTostorage_files")
+  profile_change_requests                                                    profile_change_requests[]
+  question_answers                                                           question_answers[]
+  users_storage_files_created_byTousers                                      users?                           @relation("storage_files_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  users_storage_files_updated_byTousers                                      users?                           @relation("storage_files_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  student_questions                                                          student_questions[]
+  tutor_education                                                            tutor_education[]
+  tutor_profiles_tutor_profiles_intro_video_file_idTostorage_files           tutor_profiles[]                 @relation("tutor_profiles_intro_video_file_idTostorage_files")
+  tutor_profiles_tutor_profiles_intro_video_thumbnail_file_idTostorage_files tutor_profiles[]                 @relation("tutor_profiles_intro_video_thumbnail_file_idTostorage_files")
+  users_users_avatar_file_idTostorage_files                                  users[]                          @relation("users_avatar_file_idTostorage_files")
+}
+
+model student_jobs {
+  id                                   String                          @id @db.VarChar(36)
+  student_id                           String                          @db.VarChar(36)
+  subject_id                           String                          @db.VarChar(36)
+  target_grade_level                   String                          @db.VarChar(50)
+  target_topics                        String[]                        @default([])
+  learning_goal                        String
+  budget_min                           Decimal                         @db.Decimal(10, 2)
+  budget_max                           Decimal                         @db.Decimal(10, 2)
+  location_type                        student_jobs_location_type_enum
+  location                             Unsupported("geometry")?
+  frequency_per_week                   Int                             @db.SmallInt
+  preferred_days                       Int[]                           @db.SmallInt
+  status                               student_jobs_status_enum
+  share_count                          Int                             @default(0)
+  is_active                            Boolean                         @default(true)
+  created_by                           String?                         @db.VarChar(36)
+  updated_by                           String?                         @db.VarChar(36)
+  created_at                           DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime                        @default(now()) @db.Timestamptz(6)
+  bookings                             bookings[]
+  job_applications                     job_applications[]
+  users_student_jobs_created_byTousers users?                          @relation("student_jobs_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  student_profiles                     student_profiles                @relation(fields: [student_id], references: [id])
+  subjects                             subjects                        @relation(fields: [subject_id], references: [id])
+  users_student_jobs_updated_byTousers users?                          @relation("student_jobs_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+}
+
+model student_profiles {
+  id                                       String                  @id @db.VarChar(36)
+  user_id                                  String                  @unique @db.VarChar(36)
+  first_name                               String                  @db.VarChar(100)
+  last_name                                String                  @db.VarChar(100)
+  current_grade_level                      String                  @db.VarChar(50)
+  school_name                              String                  @db.VarChar(150)
+  location                                 Unsupported("geometry")
+  parent_name                              String?                 @db.VarChar(150)
+  parent_phone_number                      String?                 @db.VarChar(30)
+  parent_relationship                      String?                 @db.VarChar(50)
+  emergency_contact_name                   String?                 @db.VarChar(150)
+  emergency_contact_phone                  String?                 @db.VarChar(30)
+  emergency_contact_relationship           String?                 @db.VarChar(50)
+  is_active                                Boolean                 @default(true)
+  created_by                               String?                 @db.VarChar(36)
+  updated_by                               String?                 @db.VarChar(36)
+  created_at                               DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime                @default(now()) @db.Timestamptz(6)
+  bookings                                 bookings[]
+  class_sessions                           class_sessions[]
+  conversations                            conversations[]
+  student_jobs                             student_jobs[]
+  users_student_profiles_created_byTousers users?                  @relation("student_profiles_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  users_student_profiles_updated_byTousers users?                  @relation("student_profiles_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  users_student_profiles_user_idTousers    users                   @relation("student_profiles_user_idTousers", fields: [user_id], references: [id])
+  student_questions                        student_questions[]
+}
+
+model student_questions {
+  id                                        String                        @id @db.VarChar(36)
+  student_id                                String                        @db.VarChar(36)
+  subject_id                                String                        @db.VarChar(36)
+  target_topics                             String[]                      @default([])
+  title                                     String                        @db.VarChar(200)
+  content                                   String
+  question_image_file_id                    String?                       @db.VarChar(36)
+  status                                    student_questions_status_enum @default(OPEN)
+  view_count                                Int                           @default(0)
+  answers_count                             Int                           @default(0)
+  share_count                               Int                           @default(0)
+  is_active                                 Boolean                       @default(true)
+  created_by                                String?                       @db.VarChar(36)
+  updated_by                                String?                       @db.VarChar(36)
+  created_at                                DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime                      @default(now()) @db.Timestamptz(6)
+  question_answers                          question_answers[]
+  users_student_questions_created_byTousers users?                        @relation("student_questions_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  storage_files                             storage_files?                @relation(fields: [question_image_file_id], references: [id], onDelete: Restrict)
+  student_profiles                          student_profiles              @relation(fields: [student_id], references: [id])
+  subjects                                  subjects                      @relation(fields: [subject_id], references: [id])
+  users_student_questions_updated_byTousers users?                        @relation("student_questions_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+}
+
+model subjects {
+  id                               String              @id @db.VarChar(36)
+  name_th                          String              @db.VarChar(100)
+  name_en                          String              @db.VarChar(100)
+  category                         String              @db.VarChar(50)
+  is_active                        Boolean             @default(true)
+  created_by                       String?             @db.VarChar(36)
+  updated_by                       String?             @db.VarChar(36)
+  created_at                       DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                       DateTime            @default(now()) @db.Timestamptz(6)
+  bookings                         bookings[]
+  student_jobs                     student_jobs[]
+  student_questions                student_questions[]
+  users_subjects_created_byTousers users?              @relation("subjects_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  users_subjects_updated_byTousers users?              @relation("subjects_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  tutor_subjects                   tutor_subjects[]
+}
+
+model tutor_availability {
+  id                                         String         @id @db.VarChar(36)
+  tutor_id                                   String         @db.VarChar(36)
+  is_recurring                               Boolean
+  day_of_week                                Int?           @db.SmallInt
+  specific_date                              DateTime?      @db.Date
+  start_time                                 DateTime       @db.Time(6)
+  end_time                                   DateTime       @db.Time(6)
+  is_active                                  Boolean        @default(true)
+  created_by                                 String?        @db.VarChar(36)
+  updated_by                                 String?        @db.VarChar(36)
+  created_at                                 DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime       @default(now()) @db.Timestamptz(6)
+  users_tutor_availability_created_byTousers users?         @relation("tutor_availability_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  tutor_profiles                             tutor_profiles @relation(fields: [tutor_id], references: [id])
+  users_tutor_availability_updated_byTousers users?         @relation("tutor_availability_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+}
+
+model tutor_education {
+  id                                      String         @id @db.VarChar(36)
+  tutor_id                                String         @db.VarChar(36)
+  institution                             String         @db.VarChar(150)
+  degree                                  String         @db.VarChar(150)
+  major                                   String         @db.VarChar(150)
+  graduation_year                         Int            @db.SmallInt
+  verification_document_file_id           String?        @db.VarChar(36)
+  is_verified                             Boolean        @default(false)
+  is_active                               Boolean        @default(true)
+  created_by                              String?        @db.VarChar(36)
+  updated_by                              String?        @db.VarChar(36)
+  created_at                              DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime       @default(now()) @db.Timestamptz(6)
+  users_tutor_education_created_byTousers users?         @relation("tutor_education_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  tutor_profiles                          tutor_profiles @relation(fields: [tutor_id], references: [id])
+  users_tutor_education_updated_byTousers users?         @relation("tutor_education_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  storage_files                           storage_files? @relation(fields: [verification_document_file_id], references: [id], onDelete: Restrict)
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model tutor_profiles {
+  id                                                                        String                                     @id @db.VarChar(36)
+  user_id                                                                   String                                     @unique @db.VarChar(36)
+  first_name                                                                String                                     @db.VarChar(100)
+  last_name                                                                 String                                     @db.VarChar(100)
+  gender                                                                    tutor_profiles_gender_enum
+  bio                                                                       String
+  hourly_rate                                                               Decimal                                    @db.Decimal(10, 2)
+  teaching_location_type                                                    tutor_profiles_teaching_location_type_enum
+  location                                                                  Unsupported("geometry")
+  service_radius_km                                                         Decimal                                    @db.Decimal(6, 2)
+  promptpay_identifier                                                      String?                                    @db.VarChar(50)
+  bank_code                                                                 String?                                    @db.VarChar(20)
+  bank_account_number                                                       String?                                    @db.VarChar(50)
+  bank_account_name                                                         String?                                    @db.VarChar(150)
+  intro_video_file_id                                                       String?                                    @db.VarChar(36)
+  intro_video_thumbnail_file_id                                             String?                                    @db.VarChar(36)
+  intro_video_hls_url                                                       String?
+  intro_video_status                                                        String                                     @db.VarChar(20)
+  verification_status                                                       tutor_profiles_verification_status_enum
+  account_status                                                            tutor_profiles_account_status_enum
+  account_status_reason                                                     String?
+  account_status_updated_at                                                 DateTime?                                  @db.Timestamptz(6)
+  is_active                                                                 Boolean                                    @default(true)
+  created_by                                                                String?                                    @db.VarChar(36)
+  updated_by                                                                String?                                    @db.VarChar(36)
+  created_at                                                                DateTime                                   @default(now()) @db.Timestamptz(6)
+  updated_at                                                                DateTime                                   @default(now()) @db.Timestamptz(6)
+  bookings                                                                  bookings[]
+  class_sessions                                                            class_sessions[]
+  conversations                                                             conversations[]
+  job_applications                                                          job_applications[]
+  profile_change_requests                                                   profile_change_requests[]
+  question_answers                                                          question_answers[]
+  reviews                                                                   reviews[]
+  tutor_availability                                                        tutor_availability[]
+  tutor_education                                                           tutor_education[]
+  users_tutor_profiles_created_byTousers                                    users?                                     @relation("tutor_profiles_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  storage_files_tutor_profiles_intro_video_file_idTostorage_files           storage_files?                             @relation("tutor_profiles_intro_video_file_idTostorage_files", fields: [intro_video_file_id], references: [id], onDelete: Restrict)
+  storage_files_tutor_profiles_intro_video_thumbnail_file_idTostorage_files storage_files?                             @relation("tutor_profiles_intro_video_thumbnail_file_idTostorage_files", fields: [intro_video_thumbnail_file_id], references: [id], onDelete: Restrict)
+  users_tutor_profiles_updated_byTousers                                    users?                                     @relation("tutor_profiles_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  users_tutor_profiles_user_idTousers                                       users                                      @relation("tutor_profiles_user_idTousers", fields: [user_id], references: [id])
+  tutor_subjects                                                            tutor_subjects[]
+
+  @@index([is_active, account_status, hourly_rate], map: "tutor_discovery_state")
+}
+
+model tutor_subjects {
+  tutor_id                               String         @db.VarChar(36)
+  subject_id                             String         @db.VarChar(36)
+  grade_levels                           String[]       @db.VarChar(50)
+  specialized_topics                     String[]       @default([])
+  custom_rate                            Decimal?       @db.Decimal(10, 2)
+  is_active                              Boolean        @default(true)
+  created_by                             String?        @db.VarChar(36)
+  updated_by                             String?        @db.VarChar(36)
+  created_at                             DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime       @default(now()) @db.Timestamptz(6)
+  users_tutor_subjects_created_byTousers users?         @relation("tutor_subjects_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  subjects                               subjects       @relation(fields: [subject_id], references: [id])
+  tutor_profiles                         tutor_profiles @relation(fields: [tutor_id], references: [id])
+  users_tutor_subjects_updated_byTousers users?         @relation("tutor_subjects_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+
+  @@id([tutor_id, subject_id])
+}
+
+model user_activity_logs {
+  id                                         String   @id @db.VarChar(36)
+  user_id                                    String?  @db.VarChar(36)
+  browser_session_id                         String   @db.VarChar(100)
+  event_name                                 String   @db.VarChar(100)
+  page_path                                  String   @db.VarChar(255)
+  element_id                                 String?  @db.VarChar(100)
+  metadata                                   Json?
+  ip_address                                 String?  @db.Inet
+  user_agent                                 String?
+  is_active                                  Boolean  @default(true)
+  created_by                                 String?  @db.VarChar(36)
+  updated_by                                 String?  @db.VarChar(36)
+  created_at                                 DateTime @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime @default(now()) @db.Timestamptz(6)
+  users_user_activity_logs_created_byTousers users?   @relation("user_activity_logs_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  users_user_activity_logs_updated_byTousers users?   @relation("user_activity_logs_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  users_user_activity_logs_user_idTousers    users?   @relation("user_activity_logs_user_idTousers", fields: [user_id], references: [id], onDelete: Restrict)
+}
+
+model user_auth_providers {
+  id                                          String                            @id @db.VarChar(36)
+  user_id                                     String                            @db.VarChar(36)
+  provider                                    user_auth_providers_provider_enum
+  provider_user_id                            String?                           @db.VarChar(255)
+  password_hash                               String?                           @db.VarChar(255)
+  metadata                                    Json?
+  is_active                                   Boolean                           @default(true)
+  created_by                                  String?                           @db.VarChar(36)
+  updated_by                                  String?                           @db.VarChar(36)
+  created_at                                  DateTime                          @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime                          @default(now()) @db.Timestamptz(6)
+  users_user_auth_providers_created_byTousers users?                            @relation("user_auth_providers_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  users_user_auth_providers_updated_byTousers users?                            @relation("user_auth_providers_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  users_user_auth_providers_user_idTousers    users                             @relation("user_auth_providers_user_idTousers", fields: [user_id], references: [id])
+}
+
+model user_sessions {
+  id                                    String    @id @db.VarChar(36)
+  user_id                               String    @db.VarChar(36)
+  refresh_token_hash                    String    @unique @db.VarChar(255)
+  device_name                           String?   @db.VarChar(100)
+  ip_address                            String?   @db.Inet
+  user_agent                            String?
+  expires_at                            DateTime  @db.Timestamptz(6)
+  is_revoked                            Boolean   @default(false)
+  revoked_at                            DateTime? @db.Timestamptz(6)
+  last_active_at                        DateTime  @db.Timestamptz(6)
+  is_active                             Boolean   @default(true)
+  created_by                            String?   @db.VarChar(36)
+  updated_by                            String?   @db.VarChar(36)
+  created_at                            DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime  @default(now()) @db.Timestamptz(6)
+  users_user_sessions_created_byTousers users?    @relation("user_sessions_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  users_user_sessions_updated_byTousers users?    @relation("user_sessions_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  users_user_sessions_user_idTousers    users     @relation("user_sessions_user_idTousers", fields: [user_id], references: [id])
+
+  @@index([user_id, is_revoked, expires_at], map: "user_sessions_owner_state")
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model users {
+  id                                                                 String                    @id @db.VarChar(36)
+  email                                                              String                    @db.VarChar(255)
+  email_verified_at                                                  DateTime?                 @db.Timestamptz(6)
+  phone_number                                                       String?                   @db.VarChar(30)
+  phone_verified_at                                                  DateTime?                 @db.Timestamptz(6)
+  avatar_file_id                                                     String?                   @db.VarChar(36)
+  roles                                                              String[]                  @default(["STUDENT"]) @db.VarChar(20)
+  current_mode                                                       users_current_mode_enum   @default(STUDENT)
+  notification_settings                                              Json                      @default("{\"chat_enabled\": true, \"push_enabled\": true, \"email_enabled\": true, \"sms_urgent_only\": true, \"session_reminders\": true}")
+  is_active                                                          Boolean                   @default(true)
+  created_by                                                         String?                   @db.VarChar(36)
+  updated_by                                                         String?                   @db.VarChar(36)
+  created_at                                                         DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at                                                         DateTime                  @default(now()) @db.Timestamptz(6)
+  bookings_bookings_created_byTousers                                bookings[]                @relation("bookings_created_byTousers")
+  bookings_bookings_updated_byTousers                                bookings[]                @relation("bookings_updated_byTousers")
+  class_sessions_class_sessions_created_byTousers                    class_sessions[]          @relation("class_sessions_created_byTousers")
+  class_sessions_class_sessions_updated_byTousers                    class_sessions[]          @relation("class_sessions_updated_byTousers")
+  conversations_conversations_created_byTousers                      conversations[]           @relation("conversations_created_byTousers")
+  conversations_conversations_updated_byTousers                      conversations[]           @relation("conversations_updated_byTousers")
+  entity_audit_logs_entity_audit_logs_changed_byTousers              entity_audit_logs[]       @relation("entity_audit_logs_changed_byTousers")
+  entity_audit_logs_entity_audit_logs_created_byTousers              entity_audit_logs[]       @relation("entity_audit_logs_created_byTousers")
+  entity_audit_logs_entity_audit_logs_updated_byTousers              entity_audit_logs[]       @relation("entity_audit_logs_updated_byTousers")
+  invoices_invoices_created_byTousers                                invoices[]                @relation("invoices_created_byTousers")
+  invoices_invoices_payee_user_idTousers                             invoices[]                @relation("invoices_payee_user_idTousers")
+  invoices_invoices_payer_user_idTousers                             invoices[]                @relation("invoices_payer_user_idTousers")
+  invoices_invoices_updated_byTousers                                invoices[]                @relation("invoices_updated_byTousers")
+  invoices_invoices_verified_byTousers                               invoices[]                @relation("invoices_verified_byTousers")
+  job_applications_job_applications_created_byTousers                job_applications[]        @relation("job_applications_created_byTousers")
+  job_applications_job_applications_updated_byTousers                job_applications[]        @relation("job_applications_updated_byTousers")
+  messages_messages_created_byTousers                                messages[]                @relation("messages_created_byTousers")
+  messages_messages_sender_idTousers                                 messages[]                @relation("messages_sender_idTousers")
+  messages_messages_updated_byTousers                                messages[]                @relation("messages_updated_byTousers")
+  notifications_notifications_created_byTousers                      notifications[]           @relation("notifications_created_byTousers")
+  notifications_notifications_updated_byTousers                      notifications[]           @relation("notifications_updated_byTousers")
+  notifications_notifications_user_idTousers                         notifications[]           @relation("notifications_user_idTousers")
+  profile_change_requests_profile_change_requests_created_byTousers  profile_change_requests[] @relation("profile_change_requests_created_byTousers")
+  profile_change_requests_profile_change_requests_reviewed_byTousers profile_change_requests[] @relation("profile_change_requests_reviewed_byTousers")
+  profile_change_requests_profile_change_requests_updated_byTousers  profile_change_requests[] @relation("profile_change_requests_updated_byTousers")
+  profile_change_requests_profile_change_requests_user_idTousers     profile_change_requests[] @relation("profile_change_requests_user_idTousers")
+  question_answers_question_answers_created_byTousers                question_answers[]        @relation("question_answers_created_byTousers")
+  question_answers_question_answers_updated_byTousers                question_answers[]        @relation("question_answers_updated_byTousers")
+  reviews_reviews_created_byTousers                                  reviews[]                 @relation("reviews_created_byTousers")
+  reviews_reviews_reviewee_user_idTousers                            reviews[]                 @relation("reviews_reviewee_user_idTousers")
+  reviews_reviews_reviewer_user_idTousers                            reviews[]                 @relation("reviews_reviewer_user_idTousers")
+  reviews_reviews_updated_byTousers                                  reviews[]                 @relation("reviews_updated_byTousers")
+  storage_files_storage_files_created_byTousers                      storage_files[]           @relation("storage_files_created_byTousers")
+  storage_files_storage_files_updated_byTousers                      storage_files[]           @relation("storage_files_updated_byTousers")
+  student_jobs_student_jobs_created_byTousers                        student_jobs[]            @relation("student_jobs_created_byTousers")
+  student_jobs_student_jobs_updated_byTousers                        student_jobs[]            @relation("student_jobs_updated_byTousers")
+  student_profiles_student_profiles_created_byTousers                student_profiles[]        @relation("student_profiles_created_byTousers")
+  student_profiles_student_profiles_updated_byTousers                student_profiles[]        @relation("student_profiles_updated_byTousers")
+  student_profiles_student_profiles_user_idTousers                   student_profiles?         @relation("student_profiles_user_idTousers")
+  student_questions_student_questions_created_byTousers              student_questions[]       @relation("student_questions_created_byTousers")
+  student_questions_student_questions_updated_byTousers              student_questions[]       @relation("student_questions_updated_byTousers")
+  subjects_subjects_created_byTousers                                subjects[]                @relation("subjects_created_byTousers")
+  subjects_subjects_updated_byTousers                                subjects[]                @relation("subjects_updated_byTousers")
+  tutor_availability_tutor_availability_created_byTousers            tutor_availability[]      @relation("tutor_availability_created_byTousers")
+  tutor_availability_tutor_availability_updated_byTousers            tutor_availability[]      @relation("tutor_availability_updated_byTousers")
+  tutor_education_tutor_education_created_byTousers                  tutor_education[]         @relation("tutor_education_created_byTousers")
+  tutor_education_tutor_education_updated_byTousers                  tutor_education[]         @relation("tutor_education_updated_byTousers")
+  tutor_profiles_tutor_profiles_created_byTousers                    tutor_profiles[]          @relation("tutor_profiles_created_byTousers")
+  tutor_profiles_tutor_profiles_updated_byTousers                    tutor_profiles[]          @relation("tutor_profiles_updated_byTousers")
+  tutor_profiles_tutor_profiles_user_idTousers                       tutor_profiles?           @relation("tutor_profiles_user_idTousers")
+  tutor_subjects_tutor_subjects_created_byTousers                    tutor_subjects[]          @relation("tutor_subjects_created_byTousers")
+  tutor_subjects_tutor_subjects_updated_byTousers                    tutor_subjects[]          @relation("tutor_subjects_updated_byTousers")
+  user_activity_logs_user_activity_logs_created_byTousers            user_activity_logs[]      @relation("user_activity_logs_created_byTousers")
+  user_activity_logs_user_activity_logs_updated_byTousers            user_activity_logs[]      @relation("user_activity_logs_updated_byTousers")
+  user_activity_logs_user_activity_logs_user_idTousers               user_activity_logs[]      @relation("user_activity_logs_user_idTousers")
+  user_auth_providers_user_auth_providers_created_byTousers          user_auth_providers[]     @relation("user_auth_providers_created_byTousers")
+  user_auth_providers_user_auth_providers_updated_byTousers          user_auth_providers[]     @relation("user_auth_providers_updated_byTousers")
+  user_auth_providers_user_auth_providers_user_idTousers             user_auth_providers[]     @relation("user_auth_providers_user_idTousers")
+  user_sessions_user_sessions_created_byTousers                      user_sessions[]           @relation("user_sessions_created_byTousers")
+  user_sessions_user_sessions_updated_byTousers                      user_sessions[]           @relation("user_sessions_updated_byTousers")
+  user_sessions_user_sessions_user_idTousers                         user_sessions[]           @relation("user_sessions_user_idTousers")
+  storage_files_users_avatar_file_idTostorage_files                  storage_files?            @relation("users_avatar_file_idTostorage_files", fields: [avatar_file_id], references: [id], onDelete: Restrict)
+  users_users_created_byTousers                                      users?                    @relation("users_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  other_users_users_created_byTousers                                users[]                   @relation("users_created_byTousers")
+  users_users_updated_byTousers                                      users?                    @relation("users_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  other_users_users_updated_byTousers                                users[]                   @relation("users_updated_byTousers")
+}
+
+enum bookings_location_type_enum {
+  ONLINE
+  ONSITE
+}
+
+enum bookings_status_enum {
+  PENDING_CONFIRMATION
+  ACTIVE
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum class_sessions_payment_status_enum {
+  PENDING_PAYMENT
+  STUDENT_PAID
+  TUTOR_CONFIRMED
+  DISPUTED
+}
+
+enum class_sessions_status_enum {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED_BY_STUDENT
+  CANCELLED_BY_TUTOR
+  NO_SHOW
+}
+
+enum entity_audit_logs_action_enum {
+  INSERT
+  UPDATE
+  DELETE
+}
+
+enum invoices_invoice_type_enum {
+  STUDENT_TUITION
+  TUTOR_COMMISSION
+}
+
+enum invoices_payment_method_enum {
+  BANK_TRANSFER
+  PROMPTPAY
+  CREDIT_CARD
+  CASH
+  OTHER
+}
+
+enum invoices_status_enum {
+  UNPAID
+  PENDING_VERIFICATION
+  PAID
+  CANCELLED
+}
+
+enum job_applications_status_enum {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum messages_message_type_enum {
+  TEXT
+  EMOJI
+  IMAGE
+  VIDEO
+  FILE
+}
+
+enum notifications_priority_tier_enum {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum profile_change_requests_request_type_enum {
+  LEGAL_NAME
+  EDUCATION
+  IDENTIFICATION
+  OTHER
+}
+
+enum profile_change_requests_status_enum {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum storage_files_file_category_enum {
+  AVATAR
+  INTRO_VIDEO
+  VIDEO_THUMBNAIL
+  VERIFICATION_DOC
+  CHANGE_REQUEST_DOC
+  PAYMENT_SLIP
+  SIGNED_CONTRACT_PDF
+  CHAT_MEDIA
+  QUESTION_IMAGE
+  ANSWER_IMAGE
+  OTHER
+}
+
+enum student_jobs_location_type_enum {
+  ONLINE
+  ONSITE
+  BOTH
+}
+
+enum student_jobs_status_enum {
+  OPEN
+  MATCHED
+  CLOSED
+  CANCELLED
+}
+
+enum student_questions_status_enum {
+  OPEN
+  RESOLVED
+  CLOSED
+}
+
+enum tutor_profiles_account_status_enum {
+  ACTIVE
+  RESTRICTED
+  SUSPENDED
+}
+
+enum tutor_profiles_gender_enum {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum tutor_profiles_teaching_location_type_enum {
+  ONLINE
+  ONSITE
+  BOTH
+}
+
+enum tutor_profiles_verification_status_enum {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum user_auth_providers_provider_enum {
+  LOCAL
+  GOOGLE
+  APPLE
+  LINE
+  FACEBOOK
+}
+
+enum users_current_mode_enum {
+  STUDENT
+  TUTOR
+  ADMIN
+}
