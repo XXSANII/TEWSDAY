@@ -3,6 +3,7 @@ import { requestContext } from './common/request-context';
 import { newId } from './common/ids';
 
 export const db = new PrismaClient({ transactionOptions: { maxWait: 10000, timeout: 10000 } });
+export const prisma = db; // Re-export as prisma
 export type Transaction = Prisma.TransactionClient;
 
 export async function transaction<T>(actor: string, fn: (tx: Transaction) => Promise<T>) {
