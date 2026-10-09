@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import * as controller from '../controllers/auth.controller';
+import { authenticate } from '../middleware/auth';
+export const authRouter = Router();
+authRouter.post('/register', controller.register);
+authRouter.post('/login', controller.login);
+authRouter.post('/oauth/:provider', controller.oauthLogin);
+authRouter.post('/refresh', controller.refreshToken);
+authRouter.post('/refresh-token', controller.refreshToken);
+authRouter.post('/logout', authenticate, controller.logout);
+authRouter.get('/sessions', authenticate, controller.getSessions);
+authRouter.delete('/sessions/:id', authenticate, controller.forceLogout);
+export default authRouter;
