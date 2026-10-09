@@ -1,17 +1,22 @@
 import { Router } from 'express';
 import {
-  createInvoiceHandler,
+  getUserInvoicesHandler,
   getInvoiceByIdHandler,
-  verifySlipHandler,
+  payInvoiceHandler,
+  verifyInvoiceHandler,
 } from '../controllers/invoice.controller';
-import { createInvoiceSchema, verifySlipSchema } from '../schemas/invoice.schema';
+import { payInvoiceSchema } from '../schemas/invoice.schema';
 import { validateRequest } from '../middleware/validate';
-import { requireAuth } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
-router.post('/', requireAuth, validateRequest(createInvoiceSchema), createInvoiceHandler);
-router.get('/:id', requireAuth, getInvoiceByIdHandler);
-router.post('/:id/verify-slip', requireAuth, validateRequest(verifySlipSchema), verifySlipHandler);
+router.use(authenticate);
+
+// Card 11: Invoices
+router.get('/', getUserInvoicesHandler);
+router.get('/:id', getInvoiceByIdHandler);
+router.post('/:id/pay', validateRequest(payInvoiceSchema), payInvoiceHandler);
+router.patch('/:id/verify', verifyInvoiceHandler);
 
 export default router;

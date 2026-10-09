@@ -1,22 +1,22 @@
 import { Router } from 'express';
 import {
-  createSessionHandler,
-  getSessionsByBookingHandler,
-  updateSessionStatusHandler,
+  getSessionByIdHandler,
+  startSessionHandler,
+  completeSessionHandler,
+  confirmAttendanceHandler,
 } from '../controllers/session.controller';
-import { createSessionSchema, updateSessionStatusSchema } from '../schemas/session.schema';
+import { completeSessionSchema } from '../schemas/session.schema';
 import { validateRequest } from '../middleware/validate';
-import { requireAuth } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
-router.post('/', requireAuth, validateRequest(createSessionSchema), createSessionHandler);
-router.get('/', requireAuth, getSessionsByBookingHandler);
-router.patch(
-  '/:id/status',
-  requireAuth,
-  validateRequest(updateSessionStatusSchema),
-  updateSessionStatusHandler,
-);
+router.use(authenticate);
+
+// Card 10: Session Direct Actions
+router.get('/:id', getSessionByIdHandler);
+router.patch('/:id/start', startSessionHandler);
+router.patch('/:id/complete', validateRequest(completeSessionSchema), completeSessionHandler);
+router.patch('/:id/confirm-attendance', confirmAttendanceHandler);
 
 export default router;

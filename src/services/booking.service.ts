@@ -1,32 +1,71 @@
 import { prisma } from '../db';
 import { generateId } from '../utils/typeid';
-import { CreateBookingInput, UpdateBookingStatusInput } from '../schemas/booking.schema';
+import { ApiError } from '../common/errors';
+import {
+  CreateBookingInput,
+  UploadContractInput,
+  CancelBookingInput,
+} from '../schemas/booking.schema';
 import { bookings_status_enum, bookings_location_type_enum } from '@prisma/client';
 
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  PENDING: ['ACCEPTED', 'REJECTED', 'CANCELLED'],
-  ACCEPTED: ['COMPLETED', 'CANCELLED'],
-  REJECTED: [],
-  CANCELLED: [],
-  COMPLETED: [],
-};
-
 export class BookingService {
-  async createBooking(studentId: string, input: CreateBookingInput) {
-    const booking = await prisma.bookings.create({
+  async createBooking(userId: string, input: CreateBookingInput) {
+    const studentProfile = await prisma.student_profiles.findUnique({
+      where: { user_id: userId },
+    });
+    if (!studentProfile) {
+      throw new ApiError(404, 'NOT_FOUND', 'Student profile not found');
+    }
+
+    const tutorProfile = await prisma.tutor_profiles.findFirst({
+      where: {
+        OR: [{ id: input.tutor_id }, { user_id: input.tutor_id }],
+      },
+    });
+    if (!tutorProfile) {
+      throw new ApiError(404, 'NOT_FOUND', 'Tutor profile not found');
+    }
+
+    return prisma.bookings.create({
       data: {
         id: generateId('bkg'),
-        student_id: studentId,
-        tutor_id: input.tutor_id,
+        student_id: studentProfile.id,
+        tutor_id: tutorProfile.id,
         subject_id: input.subject_id,
         originating_job_id: input.job_id ?? null,
         agreed_hourly_rate: input.hourly_rate,
         location_type: input.learning_mode as bookings_location_type_enum,
-        status: 'PENDING' as bookings_status_enum,
+        meeting_location: input.meeting_location ?? null,
+        meeting_url: input.meeting_url ?? null,
+        status: 'PENDING_CONFIRMATION' as bookings_status_enum,
       },
     });
+  }
 
-    return booking;
+  async getUserBookings(userId: string) {
+    const studentProfile = await prisma.student_profiles.findUnique({
+      where: { user_id: userId },
+    });
+    const tutorProfile = await prisma.tutor_profiles.findUnique({
+      where: { user_id: userId },
+    });
+
+    const conditions = [];
+    if (studentProfile) conditions.push({ student_id: studentProfile.id });
+    if (tutorProfile) conditions.push({ tutor_id: tutorProfile.id });
+
+    if (conditions.length === 0) return [];
+
+    return prisma.bookings.findMany({
+      where: {
+        OR: conditions,
+      },
+      include: {
+        class_sessions: true,
+        invoices: true,
+      },
+      orderBy: { created_at: 'desc' },
+    });
   }
 
   async getBookingById(bookingId: string) {
@@ -35,43 +74,71 @@ export class BookingService {
       include: {
         class_sessions: true,
         invoices: true,
+        student_profiles: true,
+        tutor_profiles: true,
+        subjects: true,
       },
     });
 
     if (!booking) {
-      throw new Error(`Booking ${bookingId} not found`);
+      throw new ApiError(404, 'NOT_FOUND', `Booking ${bookingId} not found`);
     }
 
     return booking;
   }
 
-  async updateBookingStatus(bookingId: string, input: UpdateBookingStatusInput) {
-    const booking = await prisma.bookings.findUnique({
-      where: { id: bookingId },
-    });
-
+  async uploadContract(bookingId: string, input: UploadContractInput) {
+    const booking = await prisma.bookings.findUnique({ where: { id: bookingId } });
     if (!booking) {
-      throw new Error(`Booking ${bookingId} not found`);
+      throw new ApiError(404, 'NOT_FOUND', `Booking ${bookingId} not found`);
     }
 
-    const currentStatus = booking.status;
-    const allowedNextStatuses = VALID_TRANSITIONS[currentStatus] || [];
-
-    if (!allowedNextStatuses.includes(input.status)) {
-      throw new Error(
-        `Invalid status transition from ${currentStatus} to${input.status}. Allowed transitions: ${allowedNextStatuses.join(', ') || 'none'}`,
+    if (booking.status === 'CANCELLED' || booking.status === 'REJECTED') {
+      throw new ApiError(
+        409,
+        'CONFLICT',
+        'Cannot upload contract for cancelled or rejected booking',
       );
     }
 
-    const updatedBooking = await prisma.bookings.update({
+    return prisma.bookings.update({
       where: { id: bookingId },
       data: {
-        status: input.status as bookings_status_enum,
+        signed_contract_file_id: input.signed_contract_file_id,
+        contract_uploaded_at: new Date(),
         updated_at: new Date(),
       },
     });
+  }
 
-    return updatedBooking;
+  async confirmBooking(bookingId: string) {
+    const booking = await prisma.bookings.findUnique({ where: { id: bookingId } });
+    if (!booking) {
+      throw new ApiError(404, 'NOT_FOUND', `Booking ${bookingId} not found`);
+    }
+
+    return prisma.bookings.update({
+      where: { id: bookingId },
+      data: {
+        status: 'ACTIVE' as bookings_status_enum,
+        updated_at: new Date(),
+      },
+    });
+  }
+
+  async cancelBooking(bookingId: string, _input: CancelBookingInput) {
+    const booking = await prisma.bookings.findUnique({ where: { id: bookingId } });
+    if (!booking) {
+      throw new ApiError(404, 'NOT_FOUND', `Booking ${bookingId} not found`);
+    }
+
+    return prisma.bookings.update({
+      where: { id: bookingId },
+      data: {
+        status: 'CANCELLED' as bookings_status_enum,
+        updated_at: new Date(),
+      },
+    });
   }
 }
 

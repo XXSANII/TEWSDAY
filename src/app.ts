@@ -99,11 +99,11 @@ export function createApp() {
   app.use('/api/v1/tutors', tutorProfileRouter, tutorSearchRouter);
   app.use('/api/v1/jobs', jobRouter);
   app.use('/api/v1/applications', applicationRouter);
-  app.use((_req, _res, next) => next(new ApiError(404, 'NOT_FOUND', 'Endpoint not found')));
-  app.use(errorHandler);
   app.use('/api/v1/bookings', bookingRoutes);
   app.use('/api/v1/sessions', sessionRoutes);
   app.use('/api/v1/invoices', invoiceRoutes);
+  app.use((_req, _res, next) => next(new ApiError(404, 'NOT_FOUND', 'Endpoint not found')));
+  app.use(errorHandler);
   return app;
 }
 

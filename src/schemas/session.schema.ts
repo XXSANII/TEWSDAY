@@ -1,23 +1,24 @@
 import { z } from 'zod';
 
 export const createSessionSchema = z.object({
+  params: z.object({
+    id: z.string().min(1), // booking_id
+  }),
   body: z.object({
-    booking_id: z.string().min(1, 'Booking ID is required'),
-    start_time: z.string().datetime({ message: 'Invalid ISO start_time format' }),
-    end_time: z.string().datetime({ message: 'Invalid ISO end_time format' }),
-    meeting_link: z.string().url().optional(),
-    location_name: z.string().optional(),
+    scheduled_start: z.string().datetime({ message: 'Invalid ISO scheduled_start format' }),
+    scheduled_end: z.string().datetime({ message: 'Invalid ISO scheduled_end format' }),
   }),
 });
 
-export const updateSessionStatusSchema = z.object({
+export const completeSessionSchema = z.object({
   params: z.object({
     id: z.string().min(1),
   }),
   body: z.object({
-    status: z.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']),
+    session_feedback: z.string().optional(),
+    homework_assigned: z.string().optional(),
   }),
 });
 
 export type CreateSessionInput = z.infer<typeof createSessionSchema>['body'];
-export type UpdateSessionStatusInput = z.infer<typeof updateSessionStatusSchema>['body'];
+export type CompleteSessionInput = z.infer<typeof completeSessionSchema>['body'];

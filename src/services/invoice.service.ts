@@ -1,83 +1,66 @@
 import { prisma } from '../db';
-import { generateId } from '../utils/typeid';
-import { CreateInvoiceInput, VerifySlipInput } from '../schemas/invoice.schema';
-import { invoices_status_enum, invoices_invoice_type_enum } from '@prisma/client';
+import { ApiError } from '../common/errors';
+import { PayInvoiceInput } from '../schemas/invoice.schema';
+import { invoices_status_enum } from '@prisma/client';
 
 export class InvoiceService {
-  async createInvoice(input: CreateInvoiceInput) {
-    const booking = await prisma.bookings.findUnique({
-      where: { id: input.booking_id },
-    });
-
-    if (!booking) {
-      throw new Error(`Booking ${input.booking_id} not found`);
-    }
-
-    const subtotal = Number(booking.agreed_hourly_rate);
-    const commissionFee = (subtotal * input.commission_rate) / 100;
-    const totalAmount = subtotal + commissionFee;
-
-    const invoice = await prisma.invoices.create({
-      data: {
-        id: generateId('inv'),
-        invoice_number: `INV-${Date.now()}`,
-        invoice_type: 'TUITION' as invoices_invoice_type_enum,
-        booking_id: input.booking_id,
-        payer_user_id: booking.student_id,
-        payee_user_id: booking.tutor_id,
-        amount: totalAmount,
-        commission_fee: commissionFee,
-        status: 'UNPAID' as invoices_status_enum,
+  async getUserInvoices(userId: string) {
+    return prisma.invoices.findMany({
+      where: {
+        OR: [{ payer_user_id: userId }, { payee_user_id: userId }],
       },
+      orderBy: { created_at: 'desc' },
     });
-
-    return invoice;
-  }
-
-  async verifySlip(invoiceId: string, input: VerifySlipInput) {
-    const invoice = await prisma.invoices.findUnique({
-      where: { id: invoiceId },
-    });
-
-    if (!invoice) {
-      throw new Error(`Invoice ${invoiceId} not found`);
-    }
-
-    if (invoice.status === 'PAID') {
-      throw new Error('Invoice has already been paid');
-    }
-
-    const requiredAmount = Number(invoice.amount);
-    if (input.transferred_amount < requiredAmount) {
-      throw new Error(
-        `Insufficient transferred amount. Required: ${requiredAmount}, Received: ${input.transferred_amount}`,
-      );
-    }
-
-    const updatedInvoice = await prisma.invoices.update({
-      where: { id: invoiceId },
-      data: {
-        slip_file_id: input.slip_url,
-        status: 'PAID' as invoices_status_enum,
-        paid_at: new Date(),
-        updated_at: new Date(),
-      },
-    });
-
-    return updatedInvoice;
   }
 
   async getInvoiceById(invoiceId: string) {
     const invoice = await prisma.invoices.findUnique({
       where: { id: invoiceId },
-      include: { bookings: true },
+      include: { bookings: true, class_sessions: true },
     });
 
     if (!invoice) {
-      throw new Error(`Invoice ${invoiceId} not found`);
+      throw new ApiError(404, 'NOT_FOUND', `Invoice ${invoiceId} not found`);
     }
 
     return invoice;
+  }
+
+  async payInvoice(invoiceId: string, input: PayInvoiceInput) {
+    const invoice = await prisma.invoices.findUnique({ where: { id: invoiceId } });
+    if (!invoice) {
+      throw new ApiError(404, 'NOT_FOUND', `Invoice ${invoiceId} not found`);
+    }
+
+    if (invoice.status === 'PAID' || invoice.status === 'CANCELLED') {
+      throw new ApiError(409, 'CONFLICT', 'Invoice is already paid or cancelled');
+    }
+
+    return prisma.invoices.update({
+      where: { id: invoiceId },
+      data: {
+        slip_file_id: input.slip_file_id,
+        status: 'PENDING_VERIFICATION' as invoices_status_enum,
+        updated_at: new Date(),
+      },
+    });
+  }
+
+  async verifyInvoice(invoiceId: string, verifierUserId: string) {
+    const invoice = await prisma.invoices.findUnique({ where: { id: invoiceId } });
+    if (!invoice) {
+      throw new ApiError(404, 'NOT_FOUND', `Invoice ${invoiceId} not found`);
+    }
+
+    return prisma.invoices.update({
+      where: { id: invoiceId },
+      data: {
+        status: 'PAID' as invoices_status_enum,
+        paid_at: new Date(),
+        verified_by: verifierUserId,
+        updated_at: new Date(),
+      },
+    });
   }
 }
 
