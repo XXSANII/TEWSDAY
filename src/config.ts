@@ -12,6 +12,9 @@ const configSchema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:5173'),
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
   LOG_LEVEL: z.enum(['silent', 'fatal', 'error', 'warn', 'info', 'debug']).default('info'),
+    AWS_REGION: z.string().default('ap-southeast-1'),
+  S3_BUCKET: z.string().min(1),
+  S3_ENDPOINT: z.url().optional(),
 });
 
 export const config = configSchema.parse({

@@ -24,6 +24,9 @@ import { jobRouter, applicationRouter } from './modules/marketplace/router';
 import { userRouter } from './modules/users/router';
 import { subjectRouter } from './modules/subjects/router';
 import { openapi } from './openapi';
+import bookingRoutes from './routes/booking.routes';
+import sessionRoutes from './routes/session.routes';
+import invoiceRoutes from './routes/invoice.routes';
 
 function limiter(prefix: string, limit: number, windowMs: number) {
   return rateLimit({
@@ -96,6 +99,9 @@ export function createApp() {
   app.use('/api/v1/tutors', tutorProfileRouter, tutorSearchRouter);
   app.use('/api/v1/jobs', jobRouter);
   app.use('/api/v1/applications', applicationRouter);
+  app.use('/api/v1/bookings', bookingRoutes);
+  app.use('/api/v1/sessions', sessionRoutes);
+  app.use('/api/v1/invoices', invoiceRoutes);
   app.use((_req, _res, next) => next(new ApiError(404, 'NOT_FOUND', 'Endpoint not found')));
   app.use(errorHandler);
   return app;

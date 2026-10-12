@@ -6,6 +6,8 @@ import { ApiError, guard } from '../common/errors';
 import { userRateLimit } from './user-rate-limit';
 import { setRequestSession } from '../common/request-context';
 
+import { Request, Response, NextFunction } from 'express';
+
 export interface Actor {
   userId: string;
   sessionId: string;
@@ -69,3 +71,18 @@ export const roles =
     );
     next();
   };
+
+export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({
+      error: {
+        code: 'UNAUTHORIZED',
+        message: 'Authentication required',
+        timestamp: new Date().toISOString(),
+      },
+    });
+    return;
+  }
+  next();
+}
