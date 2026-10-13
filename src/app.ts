@@ -10,6 +10,7 @@ import swaggerUi from 'swagger-ui-express';
 import { allowedOrigins, config } from './config';
 import { db } from './db';
 import { redis } from './redis';
+import { storageRouter } from './modules/storage/router';
 import { ApiError } from './common/errors';
 import { errorHandler } from './middleware/errors';
 import { requestContext } from './common/request-context';
@@ -102,6 +103,7 @@ export function createApp() {
   app.use('/api/v1/bookings', bookingRoutes);
   app.use('/api/v1/sessions', sessionRoutes);
   app.use('/api/v1/invoices', invoiceRoutes);
+  app.use('/api/v1/storage', storageRouter);
   app.use((_req, _res, next) => next(new ApiError(404, 'NOT_FOUND', 'Endpoint not found')));
   app.use(errorHandler);
   return app;

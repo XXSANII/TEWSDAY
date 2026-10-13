@@ -1,12 +1,14 @@
 import request from 'supertest';
-import app from '../../src/app';
-import { prisma } from '../../src/db';
+import { createApp } from '../../src/app';
+import { db } from '../../src/db';
 import { reset, person, Person, subjectId } from './helpers';
 import {
   bookings_status_enum,
   invoices_invoice_type_enum,
   storage_files_file_category_enum,
 } from '@prisma/client';
+
+const app = createApp();
 
 describe('Core Business Logic (Cards 9, 10, 11)', () => {
   let student: Person;
@@ -20,8 +22,8 @@ describe('Core Business Logic (Cards 9, 10, 11)', () => {
     student = await person(app, 'student');
     tutor = await person(app, 'tutor');
 
-    // Seed mock storage files to satisfy foreign key constraints
-    await prisma.storage_files.createMany({
+    // Seed storage files owned by the acting users (other tests show ownership is checked via created_by).
+    await db.storage_files.createMany({
       data: [
         {
           id: 'fil_contract_123',
@@ -31,6 +33,7 @@ describe('Core Business Logic (Cards 9, 10, 11)', () => {
           mime_type: 'application/pdf',
           file_size_bytes: 1024,
           file_category: storage_files_file_category_enum.VERIFICATION_DOC,
+          created_by: student.userId,
         },
         {
           id: 'fil_slip_999',
@@ -40,10 +43,13 @@ describe('Core Business Logic (Cards 9, 10, 11)', () => {
           mime_type: 'image/jpeg',
           file_size_bytes: 2048,
           file_category: storage_files_file_category_enum.PAYMENT_SLIP,
+          created_by: student.userId,
         },
       ],
     });
   });
+
+  afterAll(() => db.$disconnect());
 
   describe('Card 9: Bookings API', () => {
     it('POST /api/v1/bookings — creates a booking request', async () => {
@@ -86,9 +92,7 @@ describe('Core Business Logic (Cards 9, 10, 11)', () => {
       const res = await request(app)
         .post(`/api/v1/bookings/${bookingId}/contract`)
         .auth(student.token, { type: 'bearer' })
-        .send({
-          signed_contract_file_id: 'fil_contract_123',
-        });
+        .send({ signed_contract_file_id: 'fil_contract_123' });
 
       expect(res.status).toBe(200);
       expect(res.body.data.signed_contract_file_id).toBe('fil_contract_123');
@@ -104,7 +108,7 @@ describe('Core Business Logic (Cards 9, 10, 11)', () => {
     });
 
     it('PATCH /api/v1/bookings/:id/cancel — cancels booking', async () => {
-      const tempBooking = await prisma.bookings.create({
+      const tempBooking = await db.bookings.create({
         data: {
           id: 'bkg_temp_cancel',
           student_id: student.studentId!,
@@ -134,14 +138,7 @@ describe('Core Business Logic (Cards 9, 10, 11)', () => {
       const res = await request(app)
         .post(`/api/v1/bookings/${bookingId}/sessions`)
         .auth(tutor.token, { type: 'bearer' })
-        .send({
-          scheduled_start: start,
-          scheduled_end: end,
-        });
-
-      if (res.status !== 201) {
-        console.error('Session creation failed:', res.status, res.body);
-      }
+        .send({ scheduled_start: start, scheduled_end: end });
 
       expect(res.status).toBe(201);
       expect(res.body.data).toHaveProperty('id');
@@ -203,7 +200,7 @@ describe('Core Business Logic (Cards 9, 10, 11)', () => {
 
   describe('Card 11: Invoices API', () => {
     beforeAll(async () => {
-      const inv = await prisma.invoices.create({
+      const inv = await db.invoices.create({
         data: {
           id: 'inv_test_123',
           invoice_number: 'INV-TEST-001',

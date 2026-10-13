@@ -15,24 +15,25 @@ import { db, transaction } from '../../db';
 import { config } from '../../config';
 import { newId } from '../../common/ids';
 
-const storageBucket = requireStorageBucket();
+// Creating the client makes no network call, so it is safe at import time.
 const s3 = new S3Client({
   region: config.AWS_REGION,
   ...(config.S3_ENDPOINT ? { endpoint: config.S3_ENDPOINT, forcePathStyle: true } : {}),
 });
-const bucket = config.S3_BUCKET;
 const maxBytes = 15 * 1024 * 1024;
 const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
 const categorySchema = z.nativeEnum(storage_files_file_category_enum);
 
+// Checked per request (not at import) so the API still boots, and the rest of the
+// test-suite still runs, when S3_BUCKET is not configured.
 function requireStorageBucket(): string {
+  const bucket = config.S3_BUCKET;
   guard(
     Boolean(bucket),
     503,
     'STORAGE_NOT_CONFIGURED',
     'Storage is not configured. Please configure S3_BUCKET.',
   );
-
   return bucket!;
 }
 
@@ -49,11 +50,11 @@ storageRouter.post('/presigned-upload', async (req, res) => {
     })
     .strict()
     .parse(req.body);
+  const storageBucket = requireStorageBucket();
 
   guard(allowedTypes.has(body.mime_type), 422, 'FILE_TYPE_NOT_ALLOWED', 'Unsupported file type');
   guard(
-    (body.file_category === 'AVATAR' && body.mime_type.startsWith('image/')) ||
-      (body.file_category !== 'AVATAR' && true),
+    body.file_category !== 'AVATAR' || body.mime_type.startsWith('image/'),
     422,
     'FILE_CATEGORY_MISMATCH',
     'File type does not match category',
@@ -88,6 +89,7 @@ storageRouter.post('/confirm-upload', async (req, res) => {
     })
     .strict()
     .parse(req.body);
+  const storageBucket = requireStorageBucket();
 
   guard(
     body.file_key.startsWith(`users/${req.actor.userId}/`),
@@ -154,6 +156,7 @@ storageRouter.post('/confirm-upload', async (req, res) => {
 
 storageRouter.get('/files/:id/view-url', async (req, res) => {
   const id = z.string().min(1).max(36).parse(req.params.id);
+  const storageBucket = requireStorageBucket();
   const file = requireFound(
     await db.storage_files.findFirst({
       where: { id, is_active: true },

@@ -36,6 +36,12 @@ test('onboarding creates one profile per user, grants role and preserves UI-mode
     .patch('/api/v1/users/me/mode')
     .auth(user.token, { type: 'bearer' })
     .send({ current_mode: 'ADMIN' })
+    .expect(400);
+  const studentOnly = await person(app, 'student');
+  await request(app)
+    .patch('/api/v1/users/me/mode')
+    .auth(studentOnly.token, { type: 'bearer' })
+    .send({ current_mode: 'TUTOR' })
     .expect(403);
 });
 
