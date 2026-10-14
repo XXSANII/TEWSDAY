@@ -73,22 +73,29 @@ model class_sessions {
 }
 
 model conversations {
-  id                                    String           @id @db.VarChar(36)
-  booking_id                            String?          @db.VarChar(36)
-  student_id                            String           @db.VarChar(36)
-  tutor_id                              String           @db.VarChar(36)
-  last_message_at                       DateTime?        @db.Timestamptz(6)
-  is_active                             Boolean          @default(true)
-  created_by                            String?          @db.VarChar(36)
-  updated_by                            String?          @db.VarChar(36)
-  created_at                            DateTime         @default(now()) @db.Timestamptz(6)
-  updated_at                            DateTime         @default(now()) @db.Timestamptz(6)
-  bookings                              bookings?        @relation(fields: [booking_id], references: [id], onDelete: Restrict)
-  users_conversations_created_byTousers users?           @relation("conversations_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
-  student_profiles                      student_profiles @relation(fields: [student_id], references: [id])
-  tutor_profiles                        tutor_profiles   @relation(fields: [tutor_id], references: [id])
-  users_conversations_updated_byTousers users?           @relation("conversations_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  id                                    String            @id @db.VarChar(36)
+  booking_id                            String?           @db.VarChar(36)
+  student_id                            String            @db.VarChar(36)
+  tutor_id                              String            @db.VarChar(36)
+  last_message_at                       DateTime?         @db.Timestamptz(6)
+  is_active                             Boolean           @default(true)
+  created_by                            String?           @db.VarChar(36)
+  updated_by                            String?           @db.VarChar(36)
+  created_at                            DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime          @default(now()) @db.Timestamptz(6)
+
+  // Cleaned Relation Names
+  booking                               bookings?         @relation(fields: [booking_id], references: [id], onDelete: Restrict)
+  created_by_user                       users?            @relation("conversations_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  student_profile                       student_profiles  @relation(fields: [student_id], references: [id])
+  tutor_profile                         tutor_profiles    @relation(fields: [tutor_id], references: [id])
+  updated_by_user                       users?            @relation("conversations_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
   messages                              messages[]
+
+  // Indexes for fast lookup by student/tutor
+  @@index([student_id], map: "idx_conversations_student")
+  @@index([tutor_id], map: "idx_conversations_tutor")
+  @@index([booking_id], map: "idx_conversations_booking")
 }
 
 model entity_audit_logs {
@@ -164,25 +171,31 @@ model job_applications {
 }
 
 model messages {
-  id                                                      String                     @id @db.VarChar(36)
-  conversation_id                                         String                     @db.VarChar(36)
-  sender_id                                               String                     @db.VarChar(36)
-  content                                                 String?
-  message_type                                            messages_message_type_enum @default(TEXT)
-  file_id                                                 String?                    @db.VarChar(36)
-  thumbnail_file_id                                       String?                    @db.VarChar(36)
-  is_read                                                 Boolean                    @default(false)
-  is_active                                               Boolean                    @default(true)
-  created_by                                              String?                    @db.VarChar(36)
-  updated_by                                              String?                    @db.VarChar(36)
-  created_at                                              DateTime                   @default(now()) @db.Timestamptz(6)
-  updated_at                                              DateTime                   @default(now()) @db.Timestamptz(6)
-  conversations                                           conversations              @relation(fields: [conversation_id], references: [id])
-  users_messages_created_byTousers                        users?                     @relation("messages_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
-  storage_files_messages_file_idTostorage_files           storage_files?             @relation("messages_file_idTostorage_files", fields: [file_id], references: [id], onDelete: Restrict)
-  users_messages_sender_idTousers                         users                      @relation("messages_sender_idTousers", fields: [sender_id], references: [id])
-  storage_files_messages_thumbnail_file_idTostorage_files storage_files?             @relation("messages_thumbnail_file_idTostorage_files", fields: [thumbnail_file_id], references: [id], onDelete: Restrict)
-  users_messages_updated_byTousers                        users?                     @relation("messages_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  id                                    String                     @id @db.VarChar(36)
+  conversation_id                       String                     @db.VarChar(36)
+  sender_id                             String                     @db.VarChar(36)
+  content                               String?
+  message_type                          messages_message_type_enum @default(TEXT)
+  file_id                               String?                    @db.VarChar(36)
+  thumbnail_file_id                     String?                    @db.VarChar(36)
+  is_read                               Boolean                    @default(false)
+  is_active                             Boolean                    @default(true)
+  created_by                            String?                    @db.VarChar(36)
+  updated_by                            String?                    @db.VarChar(36)
+  created_at                            DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime                   @default(now()) @db.Timestamptz(6)
+
+  // Cleaned Relation Names
+  conversation                          conversations              @relation(fields: [conversation_id], references: [id])
+  sender                                users                      @relation("messages_sender_idTousers", fields: [sender_id], references: [id])
+  created_by_user                       users?                     @relation("messages_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  updated_by_user                       users?                     @relation("messages_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  file                                  storage_files?             @relation("messages_file_idTostorage_files", fields: [file_id], references: [id], onDelete: Restrict)
+  thumbnail_file                        storage_files?             @relation("messages_thumbnail_file_idTostorage_files", fields: [thumbnail_file_id], references: [id], onDelete: Restrict)
+
+  // Compound index for instant message sorting & pagination
+  @@index([conversation_id, created_at(sort: Desc)], map: "idx_messages_conversation_created_at")
+  @@index([sender_id], map: "idx_messages_sender")
 }
 
 model notifications {
