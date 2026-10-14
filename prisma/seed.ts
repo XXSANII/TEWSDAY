@@ -17,7 +17,12 @@ async function main() {
     { id: 'sbj_biology', name_th: 'ชีววิทยา', name_en: 'Biology', category: 'Academic' },
     { id: 'sbj_english', name_th: 'ภาษาอังกฤษ', name_en: 'English', category: 'Languages' },
     { id: 'sbj_chinese', name_th: 'ภาษาจีน', name_en: 'Chinese', category: 'Languages' },
-    { id: 'sbj_coding', name_th: 'เขียนโปรแกรม', name_en: 'Computer & Coding', category: 'Technology' },
+    {
+      id: 'sbj_coding',
+      name_th: 'เขียนโปรแกรม',
+      name_en: 'Computer & Coding',
+      category: 'Technology',
+    },
   ];
 
   for (const subject of subjects) {
@@ -168,7 +173,7 @@ async function main() {
       subject_id: 'sbj_mathematics',
       grade_levels: ['ม.4', 'ม.5', 'ม.6'],
       specialized_topics: ['แคลคูลัส', 'ตรรกศาสตร์', 'เซต'],
-      custom_rate: 450.00,
+      custom_rate: 450.0,
       created_by: 'usr_tutor_001',
       updated_by: 'usr_tutor_001',
     },
@@ -187,7 +192,7 @@ async function main() {
       subject_id: 'sbj_coding',
       grade_levels: ['ม.ปลาย', 'มหาลัย'],
       specialized_topics: ['TypeScript', 'Node.js', 'Python'],
-      custom_rate: 500.00,
+      custom_rate: 500.0,
       created_by: 'usr_tutor_001',
       updated_by: 'usr_tutor_001',
     },
