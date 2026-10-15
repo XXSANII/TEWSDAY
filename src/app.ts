@@ -24,6 +24,7 @@ import { tutorSearchRouter } from './modules/search/router';
 import { jobRouter, applicationRouter } from './modules/marketplace/router';
 import { userRouter } from './modules/users/router';
 import { subjectRouter } from './modules/subjects/router';
+import { chatRouter } from './modules/chat/router';
 import { openapi } from './openapi';
 import bookingRoutes from './routes/booking.routes';
 import sessionRoutes from './routes/session.routes';
@@ -37,10 +38,10 @@ function limiter(prefix: string, limit: number, windowMs: number) {
     legacyHeaders: false,
     store: redis
       ? new RedisStore({
-          prefix,
-          sendCommand: (...args: string[]) =>
-            redis!.call(...(args as [string, ...string[]])) as Promise<string | number>,
-        })
+        prefix,
+        sendCommand: (...args: string[]) =>
+          redis!.call(...(args as [string, ...string[]])) as Promise<string | number>,
+      })
       : undefined,
     skip: () => config.NODE_ENV === 'test',
     handler: (_req, _res, next) =>
@@ -100,6 +101,7 @@ export function createApp() {
   app.use('/api/v1/tutors', tutorProfileRouter, tutorSearchRouter);
   app.use('/api/v1/jobs', jobRouter);
   app.use('/api/v1/applications', applicationRouter);
+  app.use('/api/v1/conversations', chatRouter);
   app.use('/api/v1/bookings', bookingRoutes);
   app.use('/api/v1/sessions', sessionRoutes);
   app.use('/api/v1/invoices', invoiceRoutes);
