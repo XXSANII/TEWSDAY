@@ -38,10 +38,10 @@ function limiter(prefix: string, limit: number, windowMs: number) {
     legacyHeaders: false,
     store: redis
       ? new RedisStore({
-        prefix,
-        sendCommand: (...args: string[]) =>
-          redis!.call(...(args as [string, ...string[]])) as Promise<string | number>,
-      })
+          prefix,
+          sendCommand: (...args: string[]) =>
+            redis!.call(...(args as [string, ...string[]])) as Promise<string | number>,
+        })
       : undefined,
     skip: () => config.NODE_ENV === 'test',
     handler: (_req, _res, next) =>
