@@ -1,4 +1,4 @@
-import { db, Transaction, transaction } from '../../db';
+import { db, transaction, Transaction } from '../../db';
 import { guard } from '../../common/errors';
 import { newId } from '../../common/ids';
 import { ownFile } from '../../common/files';
