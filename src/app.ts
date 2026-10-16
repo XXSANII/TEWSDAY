@@ -15,6 +15,7 @@ import { ApiError } from './common/errors';
 import { errorHandler } from './middleware/errors';
 import { requestContext } from './common/request-context';
 import { authRouter } from './routes/auth.routes';
+import reviewsRouter from './modules/reviews/router';
 import {
   tutorProfileRouter,
   studentProfileRouter,
@@ -106,6 +107,7 @@ export function createApp() {
   app.use('/api/v1/sessions', sessionRoutes);
   app.use('/api/v1/invoices', invoiceRoutes);
   app.use('/api/v1/storage', storageRouter);
+  app.use('/api/v1', reviewsRouter);
   app.use((_req, _res, next) => next(new ApiError(404, 'NOT_FOUND', 'Endpoint not found')));
   app.use(errorHandler);
   return app;

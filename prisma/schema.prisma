@@ -35,6 +35,7 @@ model bookings {
   class_sessions                   class_sessions[]
   conversations                    conversations[]
   invoices                         invoices[]
+  reviews                          reviews[]
 
   @@index([originating_job_id, student_id, tutor_id], map: "booking_job_lookup")
 }
@@ -73,24 +74,24 @@ model class_sessions {
 }
 
 model conversations {
-  id                                    String            @id @db.VarChar(36)
-  booking_id                            String?           @db.VarChar(36)
-  student_id                            String            @db.VarChar(36)
-  tutor_id                              String            @db.VarChar(36)
-  last_message_at                       DateTime?         @db.Timestamptz(6)
-  is_active                             Boolean           @default(true)
-  created_by                            String?           @db.VarChar(36)
-  updated_by                            String?           @db.VarChar(36)
-  created_at                            DateTime          @default(now()) @db.Timestamptz(6)
-  updated_at                            DateTime          @default(now()) @db.Timestamptz(6)
+  id              String    @id @db.VarChar(36)
+  booking_id      String?   @db.VarChar(36)
+  student_id      String    @db.VarChar(36)
+  tutor_id        String    @db.VarChar(36)
+  last_message_at DateTime? @db.Timestamptz(6)
+  is_active       Boolean   @default(true)
+  created_by      String?   @db.VarChar(36)
+  updated_by      String?   @db.VarChar(36)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
 
   // Cleaned Relation Names
-  booking                               bookings?         @relation(fields: [booking_id], references: [id], onDelete: Restrict)
-  created_by_user                       users?            @relation("conversations_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
-  student_profile                       student_profiles  @relation(fields: [student_id], references: [id])
-  tutor_profile                         tutor_profiles    @relation(fields: [tutor_id], references: [id])
-  updated_by_user                       users?            @relation("conversations_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
-  messages                              messages[]
+  booking         bookings?        @relation(fields: [booking_id], references: [id], onDelete: Restrict)
+  created_by_user users?           @relation("conversations_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  student_profile student_profiles @relation(fields: [student_id], references: [id])
+  tutor_profile   tutor_profiles   @relation(fields: [tutor_id], references: [id])
+  updated_by_user users?           @relation("conversations_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  messages        messages[]
 
   // Indexes for fast lookup by student/tutor
   @@index([student_id], map: "idx_conversations_student")
@@ -171,27 +172,27 @@ model job_applications {
 }
 
 model messages {
-  id                                    String                     @id @db.VarChar(36)
-  conversation_id                       String                     @db.VarChar(36)
-  sender_id                             String                     @db.VarChar(36)
-  content                               String?
-  message_type                          messages_message_type_enum @default(TEXT)
-  file_id                               String?                    @db.VarChar(36)
-  thumbnail_file_id                     String?                    @db.VarChar(36)
-  is_read                               Boolean                    @default(false)
-  is_active                             Boolean                    @default(true)
-  created_by                            String?                    @db.VarChar(36)
-  updated_by                            String?                    @db.VarChar(36)
-  created_at                            DateTime                   @default(now()) @db.Timestamptz(6)
-  updated_at                            DateTime                   @default(now()) @db.Timestamptz(6)
+  id                String                     @id @db.VarChar(36)
+  conversation_id   String                     @db.VarChar(36)
+  sender_id         String                     @db.VarChar(36)
+  content           String?
+  message_type      messages_message_type_enum @default(TEXT)
+  file_id           String?                    @db.VarChar(36)
+  thumbnail_file_id String?                    @db.VarChar(36)
+  is_read           Boolean                    @default(false)
+  is_active         Boolean                    @default(true)
+  created_by        String?                    @db.VarChar(36)
+  updated_by        String?                    @db.VarChar(36)
+  created_at        DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime                   @default(now()) @db.Timestamptz(6)
 
   // Cleaned Relation Names
-  conversation                          conversations              @relation(fields: [conversation_id], references: [id])
-  sender                                users                      @relation("messages_sender_idTousers", fields: [sender_id], references: [id])
-  created_by_user                       users?                     @relation("messages_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
-  updated_by_user                       users?                     @relation("messages_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
-  file                                  storage_files?             @relation("messages_file_idTostorage_files", fields: [file_id], references: [id], onDelete: Restrict)
-  thumbnail_file                        storage_files?             @relation("messages_thumbnail_file_idTostorage_files", fields: [thumbnail_file_id], references: [id], onDelete: Restrict)
+  conversation    conversations  @relation(fields: [conversation_id], references: [id])
+  sender          users          @relation("messages_sender_idTousers", fields: [sender_id], references: [id])
+  created_by_user users?         @relation("messages_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
+  updated_by_user users?         @relation("messages_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  file            storage_files? @relation("messages_file_idTostorage_files", fields: [file_id], references: [id], onDelete: Restrict)
+  thumbnail_file  storage_files? @relation("messages_thumbnail_file_idTostorage_files", fields: [thumbnail_file_id], references: [id], onDelete: Restrict)
 
   // Compound index for instant message sorting & pagination
   @@index([conversation_id, created_at(sort: Desc)], map: "idx_messages_conversation_created_at")
@@ -266,26 +267,35 @@ model question_answers {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model reviews {
-  id                                    String          @id @db.VarChar(36)
-  class_session_id                      String          @db.VarChar(36)
-  reviewer_user_id                      String          @db.VarChar(36)
-  reviewee_user_id                      String          @db.VarChar(36)
-  review_type                           String          @db.VarChar(20)
-  tutor_id                              String?         @db.VarChar(36)
-  rating_score                          Int             @db.SmallInt
-  comment                               String?
-  is_published                          Boolean         @default(true)
-  is_active                             Boolean         @default(true)
-  created_by                            String?         @db.VarChar(36)
-  updated_by                            String?         @db.VarChar(36)
-  created_at                            DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at                            DateTime        @default(now()) @db.Timestamptz(6)
-  class_sessions                        class_sessions  @relation(fields: [class_session_id], references: [id])
-  users_reviews_created_byTousers       users?          @relation("reviews_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict)
-  users_reviews_reviewee_user_idTousers users           @relation("reviews_reviewee_user_idTousers", fields: [reviewee_user_id], references: [id])
+  id               String   @id @db.VarChar(36)
+  class_session_id String?  @db.VarChar(36)
+  booking_id       String?  @db.VarChar(36)
+  reviewer_user_id String   @db.VarChar(36)
+  reviewee_user_id String   @db.VarChar(36)
+  review_type      String   @db.VarChar(30)
+  tutor_id         String?  @db.VarChar(36)
+  rating_score     Int
+  comment          String?
+  is_published     Boolean  @default(true)
+  is_active        Boolean  @default(true)
+  created_by       String?  @db.VarChar(36)
+  updated_by       String?  @db.VarChar(36)
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  class_sessions                        class_sessions? @relation(fields: [class_session_id], references: [id], onDelete: Cascade)
+  bookings                              bookings?       @relation(fields: [booking_id], references: [id], onDelete: Cascade)
   users_reviews_reviewer_user_idTousers users           @relation("reviews_reviewer_user_idTousers", fields: [reviewer_user_id], references: [id])
-  tutor_profiles                        tutor_profiles? @relation(fields: [tutor_id], references: [id], onDelete: Restrict)
-  users_reviews_updated_byTousers       users?          @relation("reviews_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict)
+  users_reviews_reviewee_user_idTousers users           @relation("reviews_reviewee_user_idTousers", fields: [reviewee_user_id], references: [id])
+  users_reviews_created_byTousers       users?          @relation("reviews_created_byTousers", fields: [created_by], references: [id])
+  users_reviews_updated_byTousers       users?          @relation("reviews_updated_byTousers", fields: [updated_by], references: [id])
+  tutor_profiles                        tutor_profiles? @relation(fields: [tutor_id], references: [id])
+
+  @@index([class_session_id])
+  @@index([reviewer_user_id])
+  @@index([reviewee_user_id])
+  @@index([tutor_id])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
